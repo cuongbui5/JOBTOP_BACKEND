@@ -4,6 +4,7 @@ public enum ApplicationStatus {
     PENDING("Đang chờ xử lý"),
     VIEWED("Đã xem"),
     APPROVED("Được chấp nhận"),
+    ADDED_TO_INTERVIEW("Đã thêm vào phỏng vấn"),
     REJECTED("Bị từ chối");
 
 

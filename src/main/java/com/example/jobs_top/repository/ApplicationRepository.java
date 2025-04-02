@@ -32,6 +32,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             @Param("username") String username
     );*/
 
+    List<Application> findAllByIdIn(List<Long> ids);
+
 
 
     @Query("""
@@ -58,12 +60,14 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     Optional<Application> findByJobIdAndUserIdOrderByCreatedAtDesc(Long jobId, Long userId);
 
-
     @Query("""
         SELECT a.id AS id,
                j.id AS jobId,
                j.title AS jobTitle,
                j.applicationDeadline AS applicationDeadline,
+               p.fullName AS fullName,
+               p.image AS image,
+               p.phone AS phone,
                a.userId AS userId,
                a.resume AS resume,
                a.status AS status,
@@ -71,10 +75,40 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
                a.updatedAt AS updatedAt
         FROM Application a
         JOIN a.job j
-        WHERE j.recruiterProfile.id = :recruiterId AND (:status IS NULL OR a.status = :status)
+        JOIN a.resume r
+        JOIN r.user u
+        LEFT JOIN u.userProfile p
+        WHERE j.recruiterProfile.id = :recruiterId AND
+        (:status IS NULL OR a.status = :status) AND
+        (:jobId IS NULL OR a.job.id = :jobId)
         ORDER BY a.createdAt DESC
     """)
-    Page<ApplicationRecruiterView> findAppliedJobsByRecruiterProfileId(@Param("recruiterId") Long recruiterId, @Param("status")ApplicationStatus status, Pageable pageable);
+    List<ApplicationRecruiterView> findApplicationByFilter(@Param("recruiterId") Long recruiterId,
+                                                                       @Param("status")ApplicationStatus status,
+                                                                       @Param("jobId")Long jobId);
+
+
+    @Query("""
+        SELECT a.id AS id,
+               j.id AS jobId,
+               j.title AS jobTitle,
+               j.applicationDeadline AS applicationDeadline,
+               p.fullName AS fullName,
+               a.userId AS userId,
+               a.resume AS resume,
+               a.status AS status,
+               a.createdAt AS createdAt,
+               a.updatedAt AS updatedAt
+        FROM Application a
+        JOIN a.job j
+        JOIN a.resume r
+        JOIN r.user u
+        LEFT JOIN u.userProfile p
+        WHERE j.recruiterProfile.id = :recruiterId AND (:status IS NULL OR a.status = :status)
+    """)
+    Page<ApplicationRecruiterView> findAppliedJobsByRecruiterProfileId(@Param("recruiterId") Long recruiterId,
+                                                                       @Param("status")ApplicationStatus status,
+                                                                       Pageable pageable);
 
 
 }

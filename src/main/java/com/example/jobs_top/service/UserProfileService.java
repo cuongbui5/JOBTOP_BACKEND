@@ -75,7 +75,7 @@ public class UserProfileService {
 
     public UserProfile getUserProfileByUserId(Long userId) {
         User user=userRepository.findById(userId).orElseThrow(()->new IllegalArgumentException("User not found with id: " + userId));
-        return userProfileRepository.findByUserId(user.getId()).orElseThrow(()->new RuntimeException("Bạn chưa có thông tin profile!"));
+        return userProfileRepository.findByUserId(user.getId()).orElseThrow(()->new RuntimeException("Không tìm thấy  thông tin!"));
 
     }
 }

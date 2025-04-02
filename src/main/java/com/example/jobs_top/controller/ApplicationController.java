@@ -23,8 +23,17 @@ public class ApplicationController {
     }
     @PostMapping("/view/{id}")
     public ResponseEntity<?> viewApplication(@PathVariable Long id) {
-
         return ResponseEntity.ok().body(new ApiResponse<>(201,"success", applicationService.viewApplication(id)));
+    }
+
+    @PostMapping("/reject/{id}")
+    public ResponseEntity<?> rejectApplication(@PathVariable Long id) {
+        return ResponseEntity.ok().body(new ApiResponse<>(201,"success", applicationService.rejectApplication(id)));
+    }
+
+    @PostMapping("/approve/{id}")
+    public ResponseEntity<?> approveApplication(@PathVariable Long id) {
+        return ResponseEntity.ok().body(new ApiResponse<>(200,"success", applicationService.approveApplication(id)));
     }
 
 
@@ -34,6 +43,13 @@ public class ApplicationController {
                                                             @RequestParam(value = "status",required = false) String status) {
         return ResponseEntity.ok().body(new ApiResponse<>(200,"success",applicationService.getAllApplicationsByRecruiter(page,size,status)));
     }
+
+    @GetMapping("/getApplicationsByFilter")
+    public ResponseEntity<?> getAllApplicationsByRecruiter(@RequestParam(value = "status",required = false) String status,
+                                                           @RequestParam(value = "jobId",required = false) Long jobId) {
+        return ResponseEntity.ok().body(new ApiResponse<>(200,"success",applicationService.getAllApplicationsByFilter(status,jobId)));
+    }
+
 
     @GetMapping("/{applicationId}")
     public ResponseEntity<?> getApplicationDetail(@PathVariable Long applicationId) {

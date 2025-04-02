@@ -141,6 +141,11 @@ public class JobService {
         return new PaginatedResponse<>(jobPage.getContent().stream().map(JobDto::new).toList(),jobPage.getTotalPages(),page,jobPage.getTotalElements());
     }
 
+    public List<?> getAllJobTitleByRecruiterProfile() {
+        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
+        return jobRepository.getAllJobTitleByRecruiterProfile(recruiterProfile.getId());
+    }
+
 
 
 

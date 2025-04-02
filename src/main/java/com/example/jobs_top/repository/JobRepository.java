@@ -4,6 +4,7 @@ import com.example.jobs_top.dto.res.JobCountDto;
 import com.example.jobs_top.dto.res.RecruiterJobCountDto;
 import com.example.jobs_top.dto.view.JobCardView;
 import com.example.jobs_top.dto.view.JobDetailView;
+import com.example.jobs_top.dto.view.JobTitleView;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
@@ -41,6 +42,13 @@ public interface JobRepository extends JpaRepository<Job, Long> {
         WHERE j.status = :status
     """)
     Page<JobCardView> findByStatus(@Param("status") JobStatus status, Pageable pageable);
+    @Query("""
+        SELECT j.id AS id, j.title AS title
+        FROM Job j
+        JOIN j.recruiterProfile r
+        WHERE r.id = :recruiterId
+    """)
+    List<JobTitleView> getAllJobTitleByRecruiterProfile(@Param("recruiterId") Long recruiterId);
 
 
     @Query("""
@@ -77,11 +85,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
                      GROUP BY j.city
     """, nativeQuery = true)
     List<Object[]> countJobsByLocation();
-    /*List<JobCountDto> countJobsByIndustry();
 
-
-
-    List<RecruiterJobCountDto> countJobsByRecruiter();*/
 
 
     @Query("SELECT j.id AS id,j.title AS title, j.requirements AS requirements, j.salaryMin AS salaryMin, j.status AS status, " +

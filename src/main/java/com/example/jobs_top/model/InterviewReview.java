@@ -6,8 +6,8 @@ import jakarta.persistence.*;
 @Table(name = "_interview_review")
 public class InterviewReview extends BaseEntity{
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id", referencedColumnName = "id")
-    private Application application;
+    @JoinColumn(name = "interview_slot_id", referencedColumnName = "id", nullable = false)
+    private InterviewSlot interviewSlot;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -18,12 +18,13 @@ public class InterviewReview extends BaseEntity{
     @Lob
     private String comment;
 
-    public Application getApplication() {
-        return application;
+
+    public InterviewSlot getInterviewSlot() {
+        return interviewSlot;
     }
 
-    public void setApplication(Application application) {
-        this.application = application;
+    public void setInterviewSlot(InterviewSlot interviewSlot) {
+        this.interviewSlot = interviewSlot;
     }
 
     public User getReviewer() {

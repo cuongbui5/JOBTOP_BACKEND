@@ -25,6 +25,16 @@ public class User extends BaseEntity {
     )
     private Set<Role> roles = new HashSet<>();
 
+    @OneToOne(mappedBy = "user")
+    private UserProfile userProfile;
+
+    public UserProfile getUserProfile() {
+        return userProfile;
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+    }
 
     public String getEmail() {
         return email;

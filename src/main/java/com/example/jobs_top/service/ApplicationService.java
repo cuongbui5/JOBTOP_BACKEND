@@ -122,7 +122,7 @@ public class ApplicationService {
 
     public PaginatedResponse<?> getAllApplicationsByRecruiter(int page,int size,String status) {
         RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
-        Pageable pageable= PageRequest.of(page-1,size);
+        Pageable pageable= PageRequest.of(page-1,5);
         ApplicationStatus statusEnum=null;
         if(status!=null){
             statusEnum=ApplicationStatus.valueOf(status);
@@ -144,15 +144,33 @@ public class ApplicationService {
 
     public Application viewApplication(Long id) {
         Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
-        //application.setViewStatus(ViewStatus.SEEN);
         application.setStatus(ApplicationStatus.VIEWED);
         return applicationRepository.save(application);
     }
 
-    public Application updateApplication(Long id) {
+
+
+    public Application rejectApplication(Long id) {
         Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
-        //application.setViewStatus(ViewStatus.SEEN);
+        application.setStatus(ApplicationStatus.REJECTED);
         return applicationRepository.save(application);
+    }
+
+    public Application approveApplication(Long id) {
+        Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
+        application.setStatus(ApplicationStatus.APPROVED);
+        return applicationRepository.save(application);
+    }
+
+    public List<ApplicationRecruiterView> getAllApplicationsByFilter( String status, Long jobId) {
+        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
+        ApplicationStatus statusEnum=null;
+        if(status!=null){
+            statusEnum=ApplicationStatus.valueOf(status);
+        }
+        return applicationRepository.findApplicationByFilter(recruiterProfile.getId(),statusEnum,jobId);
+
+
     }
 
 

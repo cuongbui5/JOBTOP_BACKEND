@@ -1,28 +1,23 @@
-package com.example.jobs_top.model;
+package com.example.jobs_top.dto.req;
 
 import com.example.jobs_top.model.enums.InterviewScheduleStatus;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-@Entity
-@Table(name = "_interview_schedule")
-public class InterviewSchedule extends BaseEntity{
-    private LocalDate interviewDate; // Lưu ngày phỏng vấn
+public class CreateInterviewSchedule {
+    private LocalDate interviewDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime startTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime endTime;
-    @Enumerated(EnumType.STRING)
     private InterviewScheduleStatus status;
-    private Long createdBy;
 
-
-    @Lob
     private String interviewNote;
-
     private String officeAddress;
-
+    private List<Long> applicationIds;
 
     public InterviewScheduleStatus getStatus() {
         return status;
@@ -30,14 +25,6 @@ public class InterviewSchedule extends BaseEntity{
 
     public void setStatus(InterviewScheduleStatus status) {
         this.status = status;
-    }
-
-    public LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
     }
 
     public LocalDate getInterviewDate() {
@@ -48,12 +35,28 @@ public class InterviewSchedule extends BaseEntity{
         this.interviewDate = interviewDate;
     }
 
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
     public LocalTime getEndTime() {
         return endTime;
     }
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public List<Long> getApplicationIds() {
+        return applicationIds;
+    }
+
+    public void setApplicationIds(List<Long> applicationIds) {
+        this.applicationIds = applicationIds;
     }
 
     public String getInterviewNote() {
@@ -70,13 +73,5 @@ public class InterviewSchedule extends BaseEntity{
 
     public void setOfficeAddress(String officeAddress) {
         this.officeAddress = officeAddress;
-    }
-
-    public Long getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
     }
 }

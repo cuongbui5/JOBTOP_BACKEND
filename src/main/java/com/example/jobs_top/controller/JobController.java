@@ -48,6 +48,14 @@ public class JobController {
         );
     }
 
+    @GetMapping("/getAllJobTitle")
+    public ResponseEntity<?> getAllJobTitleByRecruiter() {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(200,"Success",jobService.getAllJobTitleByRecruiterProfile())
+        );
+    }
+
+
     @PostMapping
     public ResponseEntity<?> saveJob(@RequestBody Job job) {
         return ResponseEntity.ok().body(
