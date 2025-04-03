@@ -1,5 +1,6 @@
 package com.example.jobs_top.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -7,9 +8,11 @@ import jakarta.persistence.*;
 public class Report extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @JsonIgnore
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id",referencedColumnName = "id")
+    @JsonIgnore
     private Job job;
     private String reason;
     private String additionalInfo;

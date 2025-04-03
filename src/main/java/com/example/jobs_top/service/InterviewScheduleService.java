@@ -4,7 +4,6 @@ import com.example.jobs_top.dto.req.CreateInterviewSchedule;
 import com.example.jobs_top.model.Application;
 import com.example.jobs_top.model.InterviewSchedule;
 import com.example.jobs_top.model.InterviewSlot;
-import com.example.jobs_top.model.RecruiterProfile;
 import com.example.jobs_top.model.enums.ApplicationStatus;
 import com.example.jobs_top.model.enums.InterviewScheduleStatus;
 import com.example.jobs_top.model.enums.SlotStatus;
@@ -15,7 +14,6 @@ import com.example.jobs_top.utils.Utils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,13 +23,15 @@ public class InterviewScheduleService {
     private final ApplicationRepository applicationRepository;
     private final InterviewSlotRepository interviewSlotRepository;
     private final RecruiterProfileService recruiterProfileService;
+    private final InterviewSlotRepository slotRepository;
 
 
-    public InterviewScheduleService(InterviewScheduleRepository interviewScheduleRepository, ApplicationRepository applicationRepository, InterviewSlotRepository interviewSlotRepository, RecruiterProfileService recruiterProfileService) {
+    public InterviewScheduleService(InterviewScheduleRepository interviewScheduleRepository, ApplicationRepository applicationRepository, InterviewSlotRepository interviewSlotRepository, RecruiterProfileService recruiterProfileService, InterviewSlotRepository slotRepository) {
         this.interviewScheduleRepository = interviewScheduleRepository;
         this.applicationRepository = applicationRepository;
         this.interviewSlotRepository = interviewSlotRepository;
         this.recruiterProfileService = recruiterProfileService;
+        this.slotRepository = slotRepository;
     }
 
     public List<InterviewSchedule> findAllByApplicationId(Long applicationId) {
@@ -78,13 +78,14 @@ public class InterviewScheduleService {
         return savedInterviewSchedule;
     }
 
-
+    @Transactional
     public InterviewSchedule updateInterviewSchedule(Long id,CreateInterviewSchedule createInterviewSchedule) {
         InterviewSchedule interviewSchedule = interviewScheduleRepository.findById(id).orElseThrow(()->new RuntimeException("InterviewSchedule not found"));
         interviewSchedule.setInterviewNote(createInterviewSchedule.getInterviewNote());
         interviewSchedule.setOfficeAddress(createInterviewSchedule.getOfficeAddress());
         interviewSchedule.setStartTime(createInterviewSchedule.getStartTime());
         interviewSchedule.setEndTime(createInterviewSchedule.getEndTime());
+        interviewSchedule.setInterviewDate(createInterviewSchedule.getInterviewDate());
         if(interviewSchedule.getStatus() != InterviewScheduleStatus.SCHEDULED){
             throw new RuntimeException("Hành động không được chấp nhận");
         }
@@ -97,6 +98,10 @@ public class InterviewScheduleService {
                 throw new RuntimeException("Chỉ có thể cập nhật hoàn thành sau khi phỏng vấn đã kết thúc ");
 
             }
+            List<InterviewSlot> slots=slotRepository.findByInterviewScheduleId(interviewSchedule.getId());
+            slotRepository.saveAll(slots.stream().peek(slot -> slot.setStatus(SlotStatus.COMPLETED)).toList());
+
+
         }
 
         interviewSchedule.setStatus(createInterviewSchedule.getStatus());

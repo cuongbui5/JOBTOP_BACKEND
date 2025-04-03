@@ -1,5 +1,6 @@
 package com.example.jobs_top.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -7,17 +8,27 @@ import jakarta.persistence.*;
 public class InterviewReview extends BaseEntity{
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_slot_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private InterviewSlot interviewSlot;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonIgnore
     private User reviewer;
+    private Long jobId;
 
     private int rating;
 
     @Lob
     private String comment;
 
+    public Long getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(Long jobId) {
+        this.jobId = jobId;
+    }
 
     public InterviewSlot getInterviewSlot() {
         return interviewSlot;

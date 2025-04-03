@@ -14,7 +14,7 @@ public interface SlotUserView {
     LocalTime getStartTime();
     LocalTime getEndTime();
     LocalDate getInterviewDate();
-
+    Long getJobId();
     String getStatus();
     String getOfficeAddress();
     ZonedDateTime getUpdatedAt();

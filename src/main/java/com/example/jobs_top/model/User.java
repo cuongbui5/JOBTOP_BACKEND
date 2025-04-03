@@ -1,5 +1,6 @@
 package com.example.jobs_top.model;
 
+import com.example.jobs_top.model.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -17,6 +18,8 @@ public class User extends BaseEntity {
     private String email;
     @JsonIgnore
     private String password;
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "_user_role",
@@ -27,6 +30,14 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user")
     private UserProfile userProfile;
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
 
     public UserProfile getUserProfile() {
         return userProfile;

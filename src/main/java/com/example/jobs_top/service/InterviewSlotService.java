@@ -11,11 +11,9 @@ import com.example.jobs_top.repository.ApplicationRepository;
 import com.example.jobs_top.repository.InterviewScheduleRepository;
 import com.example.jobs_top.repository.InterviewSlotRepository;
 import com.example.jobs_top.utils.Utils;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
 import java.util.List;
 
 @Service
@@ -46,7 +44,7 @@ public class InterviewSlotService {
 
 
     public List<?>  getAllSlotByInterViewScheduleId(Long id) {
-        return interviewSlotRepository.findByInterviewScheduleId(id);
+        return interviewSlotRepository.findByInterviewId(id);
     }
 
     @Transactional

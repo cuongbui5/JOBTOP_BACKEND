@@ -6,6 +6,7 @@ import com.example.jobs_top.dto.res.LoginResponse;
 import com.example.jobs_top.dto.res.OauthTokenResponse;
 import com.example.jobs_top.model.Role;
 import com.example.jobs_top.model.User;
+import com.example.jobs_top.model.enums.UserStatus;
 import com.example.jobs_top.repository.RoleRepository;
 import com.example.jobs_top.repository.UserRepository;
 import com.example.jobs_top.security.jwt.JwtService;
@@ -55,6 +56,7 @@ public class AuthService {
         User user = new User();
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEmail(registerRequest.getEmail());
+        user.setStatus(UserStatus.ACTIVE);
         user.getRoles().add(registerRequest.getRole());
         return userRepository.save(user);
     }

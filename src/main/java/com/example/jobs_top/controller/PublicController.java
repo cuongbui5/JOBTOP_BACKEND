@@ -2,11 +2,14 @@ package com.example.jobs_top.controller;
 
 import com.example.jobs_top.dto.res.ApiResponse;
 import com.example.jobs_top.model.UserProfile;
+import com.example.jobs_top.service.InterviewReviewService;
 import com.example.jobs_top.service.JobService;
 import com.example.jobs_top.service.RecruiterProfileService;
 import com.example.jobs_top.service.UserProfileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/public")
@@ -14,12 +17,14 @@ public class PublicController {
     private final RecruiterProfileService recruiterProfileService;
     private final JobService jobService;
     private final UserProfileService userProfileService;
+    private final InterviewReviewService interviewReviewService;
 
-    public PublicController(RecruiterProfileService recruiterProfileService, JobService jobService, UserProfileService userProfileService) {
+    public PublicController(RecruiterProfileService recruiterProfileService, JobService jobService, UserProfileService userProfileService, InterviewReviewService interviewReviewService) {
         this.recruiterProfileService = recruiterProfileService;
         this.jobService = jobService;
         this.userProfileService = userProfileService;
 
+        this.interviewReviewService = interviewReviewService;
     }
     @GetMapping("/count-jobs-by-location")
     public ResponseEntity<?> getJobCountByLocation() {
@@ -75,6 +80,22 @@ public class PublicController {
                 "Get user profile successfully",
                 jobService.getAllJobsView(page,size,datePosted,salaryRange,exp,jobType,companyId,industryId,keyword,city,sortBy)
         ));
+    }
+    @GetMapping("/reviews")
+    public ResponseEntity<?> getAllReview(@RequestParam(value = "page",defaultValue = "1") int page,
+                                          @RequestParam(value = "size",defaultValue = "5") int size,
+                                          @RequestParam(value = "jobId") Long jobId) {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(200,"success",interviewReviewService.getAllReview(jobId,page,size))
+        );
+    }
+
+    @GetMapping("/reviews/stats/{jobId}")
+    public ResponseEntity<?> getRatingStatistics(@PathVariable Long jobId) {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(200,"success",interviewReviewService.getRatingStatistics(jobId))
+        );
+
     }
 
     @GetMapping("/related-jobs/{id}")

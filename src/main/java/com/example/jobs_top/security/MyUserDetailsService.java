@@ -1,6 +1,7 @@
 package com.example.jobs_top.security;
 
 import com.example.jobs_top.model.User;
+import com.example.jobs_top.model.enums.UserStatus;
 import com.example.jobs_top.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +24,9 @@ public class MyUserDetailsService implements UserDetailsService {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isEmpty()) {
             throw new RuntimeException("Tài khoản không tồn tại.");
+        }
+        if(user.get().getStatus()== UserStatus.BANNED){
+            throw new RuntimeException("Tài khoản đã bị khóa vĩnh viễn.");
         }
 
         return new UserPrincipal(user.get());

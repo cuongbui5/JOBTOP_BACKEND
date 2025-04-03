@@ -17,6 +17,7 @@ public interface InterviewSlotRepository extends JpaRepository<InterviewSlot, Lo
         s.updatedAt AS updatedAt,
         s.application.id AS applicationId,
         s.application.job.title AS jobTitle,
+        s.application.job.id AS jobId,
         s.interviewSchedule.status AS interviewScheduleStatus,
         s.interviewSchedule.id AS interviewScheduleId,
         s.interviewSchedule.officeAddress AS officeAddress,
@@ -41,5 +42,7 @@ public interface InterviewSlotRepository extends JpaRepository<InterviewSlot, Lo
         FROM InterviewSlot s
         WHERE s.interviewSchedule.id=:interviewScheduleId
     """)
-    List<SlotView> findByInterviewScheduleId(Long interviewScheduleId);
+    List<SlotView> findByInterviewId(Long interviewScheduleId);
+
+    List<InterviewSlot> findByInterviewScheduleId(Long interviewScheduleId);
 }
