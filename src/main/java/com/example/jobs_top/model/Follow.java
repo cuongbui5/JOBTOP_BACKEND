@@ -4,31 +4,31 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "_follow")
+@Table(name = "follows")
 public class Follow extends BaseEntity{
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @JoinColumn(name = "account_id",referencedColumnName = "id")
     @JsonIgnore
-    private User user;
+    private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recruiter_id",referencedColumnName = "id")
+    @JoinColumn(name = "company_id",referencedColumnName = "id")
     @JsonIgnore
-    private RecruiterProfile recruiter;
+    private Company company;
 
-    public User getUser() {
-        return user;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
-    public RecruiterProfile getRecruiter() {
-        return recruiter;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setRecruiter(RecruiterProfile recruiter) {
-        this.recruiter = recruiter;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }

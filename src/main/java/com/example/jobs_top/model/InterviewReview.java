@@ -4,17 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "_interview_review")
+@Table(name = "interview_reviews")
 public class InterviewReview extends BaseEntity{
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "interview_slot_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "interview_schedule_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
-    private InterviewSlot interviewSlot;
+    private InterviewSchedule interviewSchedule;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonIgnore
-    private User reviewer;
+    private Account reviewer;
     private Long jobId;
 
     private int rating;
@@ -30,19 +30,19 @@ public class InterviewReview extends BaseEntity{
         this.jobId = jobId;
     }
 
-    public InterviewSlot getInterviewSlot() {
-        return interviewSlot;
+    public InterviewSchedule getInterviewSchedule() {
+        return interviewSchedule;
     }
 
-    public void setInterviewSlot(InterviewSlot interviewSlot) {
-        this.interviewSlot = interviewSlot;
+    public void setInterviewSchedule(InterviewSchedule interviewSchedule) {
+        this.interviewSchedule = interviewSchedule;
     }
 
-    public User getReviewer() {
+    public Account getReviewer() {
         return reviewer;
     }
 
-    public void setReviewer(User reviewer) {
+    public void setReviewer(Account reviewer) {
         this.reviewer = reviewer;
     }
 

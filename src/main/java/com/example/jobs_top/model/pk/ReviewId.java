@@ -1,7 +1,7 @@
 package com.example.jobs_top.model.pk;
 
-import com.example.jobs_top.model.RecruiterProfile;
-import com.example.jobs_top.model.User;
+import com.example.jobs_top.model.Company;
+import com.example.jobs_top.model.Account;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -12,13 +12,13 @@ import java.util.Objects;
 public class ReviewId {
     @ManyToOne
     @JoinColumn(name = "recruiter_profile_id", referencedColumnName = "id")
-    private RecruiterProfile recruiterProfile;
+    private Company recruiterProfile;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    private Account user;
 
-    public RecruiterProfile getRecruiterProfile() {
+    public Company getRecruiterProfile() {
         return recruiterProfile;
     }
 
@@ -35,15 +35,15 @@ public class ReviewId {
         return Objects.hash(recruiterProfile, user);
     }
 
-    public void setRecruiterProfile(RecruiterProfile recruiterProfile) {
+    public void setRecruiterProfile(Company recruiterProfile) {
         this.recruiterProfile = recruiterProfile;
     }
 
-    public User getUser() {
+    public Account getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(Account user) {
         this.user = user;
     }
 }

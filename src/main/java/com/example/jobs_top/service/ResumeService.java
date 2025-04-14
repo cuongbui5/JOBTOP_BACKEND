@@ -1,7 +1,7 @@
 package com.example.jobs_top.service;
 
 import com.example.jobs_top.model.Resume;
-import com.example.jobs_top.model.User;
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.repository.ResumeRepository;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.stereotype.Service;
@@ -16,21 +16,17 @@ public class ResumeService {
         this.resumeRepository = resumeRepository;
     }
 
-    public List<Resume> getAllResume() {
-        return resumeRepository.findAll();
+
+
+    public List<Resume> getAllResumeByAccount() {
+        Account account= Utils.getAccount();
+        return resumeRepository.findByAccountId(account.getId());
     }
 
-    public List<Resume> getAllResumeByUser() {
-        User user= Utils.getUserFromContext();
-        return resumeRepository.findByUserId(user.getId());
-    }
 
-    public Resume getResumeById(Long resumeId) {
-        return resumeRepository.findById(resumeId).get();
-    }
 
     public Resume createResume(Resume resume) {
-        resume.setUser(Utils.getUserFromContext());
+        resume.setAccount(Utils.getAccount());
         return resumeRepository.save(resume);
     }
 
@@ -40,6 +36,7 @@ public class ResumeService {
         cv.setLink(resume.getLink());
         return resumeRepository.save(cv);
     }
+
     public void deleteResume(Long id) {
         resumeRepository.deleteById(id);
     }

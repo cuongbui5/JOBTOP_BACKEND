@@ -1,11 +1,8 @@
 package com.example.jobs_top.utils;
 
 
-import com.example.jobs_top.model.User;
-import com.example.jobs_top.security.MyUserDetailsService;
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.security.UserPrincipal;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
@@ -14,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 public class Utils {
-    public static User getUserFromContext() {
+    public static Account getAccount() {
         UserPrincipal userPrincipal  = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userPrincipal.getUser();
     }

@@ -1,5 +1,6 @@
 package com.example.jobs_top.repository;
 
+import com.example.jobs_top.dto.res.ApplicationStatusStatsDTO;
 import com.example.jobs_top.dto.view.ApplicationRecruiterView;
 import com.example.jobs_top.dto.view.ApplicationUserView;
 import com.example.jobs_top.model.Application;
@@ -16,24 +17,8 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
-    /*@EntityGraph(attributePaths = {"userProfile.user", "job.recruiterProfile"})
-    @Query("SELECT a FROM Application a " +
-            "JOIN a.job j " +
-            "JOIN j.recruiterProfile r " +
-            "JOIN a.userProfile u " +
-            "JOIN u.user usr " +
-            "WHERE r.companyName LIKE %:companyName% " +
-            "AND j.title LIKE %:jobName% " +
-            "AND usr.username LIKE %:username% " +
-            "ORDER BY a.createdAt DESC limit 1")
-    Application findLatestApplicationByCriteria(
-            @Param("companyName") String companyName,
-            @Param("jobName") String jobName,
-            @Param("username") String username
-    );*/
-
     List<Application> findAllByIdIn(List<Long> ids);
-
+    List<Application> findByInterviewScheduleId(Long interviewScheduleId);
 
 
     @Query("""
@@ -45,30 +30,31 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
                j.salaryMin AS salaryMin,
                j.salaryMax AS salaryMax,
                j.experienceLevel as experienceLevel,
-               j.recruiterProfile.companyName AS companyName,
-               j.recruiterProfile.id AS recruiterProfileId,
+               j.company.name AS companyName,
+               j.company.id AS companyId,
                a.resume AS resume,
                a.status AS status,
                a.createdAt AS createdAt,
-               a.updatedAt AS updatedAt
+               a.updatedAt AS updatedAt,
+               a.interviewSchedule AS interviewSchedule
         FROM Application a
         JOIN a.job j
-        WHERE a.userId = :userId
-        ORDER BY a.createdAt DESC
+        LEFT JOIN a.interviewSchedule
+        WHERE a.account.id = :accountId AND (:status IS NULL OR a.status = :status)
     """)
-    List<ApplicationUserView> findAppliedJobsByUser(@Param("userId") Long userId);
+    Page<ApplicationUserView> findAppliedJobsByAccount(@Param("accountId") Long accountId,
+                                                       @Param("status") ApplicationStatus applicationStatus,
+                                                       Pageable pageable);
 
-    Optional<Application> findByJobIdAndUserIdOrderByCreatedAtDesc(Long jobId, Long userId);
+    Optional<Application> findByJobIdAndAccountIdOrderByCreatedAtDesc(Long jobId, Long accountId);
 
     @Query("""
         SELECT a.id AS id,
                j.id AS jobId,
                j.title AS jobTitle,
                j.applicationDeadline AS applicationDeadline,
-               p.fullName AS fullName,
-               p.image AS image,
-               p.phone AS phone,
-               a.userId AS userId,
+               c.id AS accountId,
+               c.email as email,
                a.resume AS resume,
                a.status AS status,
                a.createdAt AS createdAt,
@@ -76,25 +62,24 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
         FROM Application a
         JOIN a.job j
         JOIN a.resume r
-        JOIN r.user u
-        LEFT JOIN u.userProfile p
-        WHERE j.recruiterProfile.id = :recruiterId AND
+        JOIN a.account c
+        WHERE j.company.id = :companyId AND
         (:status IS NULL OR a.status = :status) AND
-        (:jobId IS NULL OR a.job.id = :jobId)
-        ORDER BY a.createdAt DESC
+        (:jobId IS NULL OR j.id = :jobId) AND
+        j.applicationDeadline > CURRENT_DATE
     """)
-    List<ApplicationRecruiterView> findApplicationByFilter(@Param("recruiterId") Long recruiterId,
-                                                                       @Param("status")ApplicationStatus status,
-                                                                       @Param("jobId")Long jobId);
-
+    Page<ApplicationRecruiterView> findApplicationByFilter(@Param("companyId") Long companyId,
+                                                           @Param("jobId") Long jobId,
+                                                           @Param("status")ApplicationStatus status,
+                                                           Pageable pageable);
 
     @Query("""
         SELECT a.id AS id,
                j.id AS jobId,
                j.title AS jobTitle,
                j.applicationDeadline AS applicationDeadline,
-               p.fullName AS fullName,
-               a.userId AS userId,
+               c.id AS accountId,
+               c.email as email,
                a.resume AS resume,
                a.status AS status,
                a.createdAt AS createdAt,
@@ -102,13 +87,20 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
         FROM Application a
         JOIN a.job j
         JOIN a.resume r
-        JOIN r.user u
-        LEFT JOIN u.userProfile p
-        WHERE j.recruiterProfile.id = :recruiterId AND (:status IS NULL OR a.status = :status)
+        JOIN a.account c
+        WHERE a.interviewSchedule.id = :scheduleId
     """)
-    Page<ApplicationRecruiterView> findAppliedJobsByRecruiterProfileId(@Param("recruiterId") Long recruiterId,
-                                                                       @Param("status")ApplicationStatus status,
-                                                                       Pageable pageable);
+    Page<ApplicationRecruiterView> findByScheduleId(@Param("scheduleId") Long scheduleId, Pageable pageable);
+
+    @Query(value = "SELECT " +
+            "CASE WHEN status IS NULL THEN 'TOTAL' ELSE status END AS status, " +
+            "COUNT(*) AS count " +
+            "FROM applications " +
+            "WHERE job_id = :jobId " +
+            "GROUP BY status WITH ROLLUP", nativeQuery = true)
+    List<Object[]> countApplicationsByStatusWithTotal(@Param("jobId") Long jobId);
+
+
 
 
 }

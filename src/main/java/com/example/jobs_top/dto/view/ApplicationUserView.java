@@ -1,16 +1,15 @@
 package com.example.jobs_top.dto.view;
 
-import com.example.jobs_top.model.Resume;
-import jakarta.persistence.Lob;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.time.LocalDateTime;
+import com.example.jobs_top.model.InterviewSchedule;
+import com.example.jobs_top.model.Resume;
+import com.example.jobs_top.model.enums.ApplicationStatus;
+import com.example.jobs_top.model.enums.ExperienceLevel;
 import java.time.ZonedDateTime;
 
 public interface ApplicationUserView {
     Long getId();
     Long getJobId();
-    Long getRecruiterProfileId();
     String getCompanyName();
     String getJobTitle();
     String getCity();
@@ -18,11 +17,9 @@ public interface ApplicationUserView {
     Integer getSalaryMin();
     Integer getSalaryMax();
     Resume getResume();
-    @Value("#{target.experienceLevel.label}")
-    String getExperienceLevel();
-    @Value("#{target.status.label}")
-    String getStatus();
-
+    InterviewSchedule getInterviewSchedule();
+    ExperienceLevel getExperienceLevel();
+    ApplicationStatus getStatus();
     ZonedDateTime getCreatedAt();
     ZonedDateTime getUpdatedAt();
 

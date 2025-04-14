@@ -23,9 +23,10 @@ public class ReportController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllReports() {
+    public ResponseEntity<?> getAllReports(@RequestParam(value = "page",defaultValue = "1") int page,
+                                           @RequestParam(value = "size",defaultValue = "5") int size) {
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"success",reportService.getAllReports())
+                new ApiResponse<>(200,"success",reportService.getAllReports(page,size))
         );
     }
 }

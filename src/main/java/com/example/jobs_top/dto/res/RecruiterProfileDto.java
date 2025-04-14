@@ -1,7 +1,6 @@
 package com.example.jobs_top.dto.res;
 
-import com.example.jobs_top.model.RecruiterProfile;
-import jakarta.persistence.Lob;
+import com.example.jobs_top.model.Company;
 import org.springframework.beans.BeanUtils;
 
 public class RecruiterProfileDto {
@@ -14,7 +13,7 @@ public class RecruiterProfileDto {
     private String companySize;
     private String companyWebsite;
 
-    public RecruiterProfileDto(RecruiterProfile recruiterProfile) {
+    public RecruiterProfileDto(Company recruiterProfile) {
         BeanUtils.copyProperties(recruiterProfile, this);
     }
 

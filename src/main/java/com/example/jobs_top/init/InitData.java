@@ -2,16 +2,15 @@ package com.example.jobs_top.init;
 
 import com.example.jobs_top.dto.req.RegisterRequest;
 import com.example.jobs_top.model.*;
-import com.example.jobs_top.model.enums.ApplicationStatus;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobType;
 import com.example.jobs_top.repository.*;
 import com.example.jobs_top.service.AuthService;
+import com.example.jobs_top.service.ElasticService;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -22,37 +21,39 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class InitData implements CommandLineRunner {
-    private final RoleRepository roleRepository;
+
     private final AuthService authService;
-    private final UserProfileRepository userProfileRepository;
-    private final UserRepository userRepository;
+    private final CandidateRepository candidateRepository;
+    private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
-    private final RecruiterProfileRepository recruiterProfileRepository;
+    private final CompanyRepository companyRepository;
     private final JobRepository jobRepository;
     private final ApplicationRepository applicationRepository;
     private final VectorStore vectorStore;
     private final ChatMemory chatMemory;
     private final EmbeddingModel embeddingModel;
+    private final ElasticService elasticService;
 
 
-    public InitData(RoleRepository roleRepository, AuthService authService, UserProfileRepository userProfileRepository, UserRepository userRepository, CategoryRepository categoryRepository, RecruiterProfileRepository recruiterProfileRepository, JobRepository jobRepository, ApplicationRepository applicationRepository, VectorStore vectorStore, ChatMemory chatMemory, EmbeddingModel embeddingModel) {
-        this.roleRepository = roleRepository;
+    public InitData(AuthService authService, CandidateRepository candidateRepository, AccountRepository accountRepository, CategoryRepository categoryRepository, CompanyRepository companyRepository, JobRepository jobRepository, ApplicationRepository applicationRepository, VectorStore vectorStore, ChatMemory chatMemory, EmbeddingModel embeddingModel, ElasticService elasticService) {
+
         this.authService = authService;
-        this.userProfileRepository = userProfileRepository;
-        this.userRepository = userRepository;
+        this.candidateRepository = candidateRepository;
+        this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
-        this.recruiterProfileRepository = recruiterProfileRepository;
+        this.companyRepository = companyRepository;
         this.jobRepository = jobRepository;
         this.applicationRepository = applicationRepository;
         this.vectorStore = vectorStore;
 
         this.chatMemory = chatMemory;
         this.embeddingModel = embeddingModel;
+        this.elasticService = elasticService;
     }
 
     public void initRoles(){
         String[] roleNames = { "ADMIN", "USER", "RECRUITER" };
-        roleRepository.saveAll(Arrays.stream(roleNames).map(Role::new).toList());
+
 
     }
 
@@ -76,26 +77,26 @@ public class InitData implements CommandLineRunner {
     }
 
     public void initUserProfile(){
-        Optional<User> user= Optional.ofNullable(userRepository.findByEmail("user").orElseThrow(() -> new RuntimeException("User not found")));
-        UserProfile userProfile=new UserProfile();
-        userProfile.setUser(user.get());
-        userProfile.setAddress("Hà Nội");
-        userProfile.setPhone("012345678");
+        Optional<Account> user= Optional.ofNullable(accountRepository.findByEmail("user").orElseThrow(() -> new RuntimeException("User not found")));
+        Candidate candidate =new Candidate();
 
-        userProfile.setFullName("Nguyễn Văn A");
-        userProfile.setSkills("JAVA, C#, C++");
-        userProfile.setDateOfBirth(LocalDate.of(2003, 5, 21));
-        userProfileRepository.save(userProfile);
+        candidate.setAddress("Hà Nội");
+        candidate.setPhone("012345678");
+
+
+        candidate.setSkills("JAVA, C#, C++");
+        candidate.setDateOfBirth(LocalDate.of(2003, 5, 21));
+        candidateRepository.save(candidate);
 
     }
 
 
 
     public void initRecruiterProfile(){
-        Optional<User> user= Optional.ofNullable(userRepository.findByEmail("recruiter").orElseThrow(() -> new RuntimeException("User not found")));
+        Optional<Account> user= Optional.ofNullable(accountRepository.findByEmail("recruiter").orElseThrow(() -> new RuntimeException("User not found")));
         Category category=categoryRepository.findByName("IT");
-        RecruiterProfile recruiterProfile=new RecruiterProfile();
-        recruiterProfile.setCompanyName("IT GROUP");
+        Company recruiterProfile=new Company();
+        /*recruiterProfile.setCompanyName("IT GROUP");
         recruiterProfile.setCompanyAddress("Số 9 ngõ 4 Duy Tân, Cầu Giấy, Hà Nội, Cầu Giấy");
         recruiterProfile.setCategory(category);
         recruiterProfile.setCompanyLogo("link image");
@@ -111,8 +112,8 @@ public class InitData implements CommandLineRunner {
                 "Ở DTS, hàng năm, mỗi CBNV được reivew 2-3 lần/năm. Năng lực được nhìn nhận và đãi ngộ xứng đáng. ");
         recruiterProfile.setCompanySize("25-99 nhân viên");
         recruiterProfile.setCompanyWebsite("itgroup.com.vn");
-        recruiterProfile.setUser(user.get());
-        recruiterProfileRepository.save(recruiterProfile);
+        recruiterProfile.setUser(user.get());*/
+        companyRepository.save(recruiterProfile);
     }
 
     public static JobType getRandomJobType() {
@@ -171,7 +172,7 @@ public class InitData implements CommandLineRunner {
     }
 
 
-    public void initJobs(int quantity,RecruiterProfile recruiterProfile){
+    public void initJobs(int quantity, Company recruiterProfile){
         Map<String, List<String>> requirementsMap = new HashMap<>();
 
         List<String> techBenefits = Arrays.asList(
@@ -227,7 +228,7 @@ public class InitData implements CommandLineRunner {
         Random random = new Random();
         for(int i=0;i<quantity;i++){
             Job job=new Job();
-            job.setRecruiterProfile(recruiterProfile);
+
             ExperienceLevel experienceLevel = getRandomJobLevel();
             job.setExperienceLevel(experienceLevel);
             job.setDescription("Lập trình web và ứng dụng mobile.");
@@ -255,13 +256,13 @@ public class InitData implements CommandLineRunner {
     }
 
     public void initApplication(){
-        UserProfile userProfile=userProfileRepository.findByFullName("Nguyễn Văn A");
+        /*UserProfile userProfile=userProfileRepository.findByFullName("Nguyễn Văn A");
         Optional<Job> job=jobRepository.findById(1L);
         Application application=new Application();
 
         application.setJob(job.get());
         //application.setStatus(ApplicationStatus.APPLIED);
-        applicationRepository.save(application);
+        applicationRepository.save(application);*/
 
     }
 
@@ -336,6 +337,9 @@ public class InitData implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        //List<Job> jobs=jobRepository.findAll();
+        //jobs.forEach(elasticService::saveJobDocument);
+        //elasticService.deleteAllDocuments("custom_index3");
         //initRoles();
         //initUsers();
         //initCategory();

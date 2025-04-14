@@ -4,9 +4,8 @@ import com.example.jobs_top.model.Resume;
 
 public interface SlotView {
     Long getId();
-    String getFullName();
-    String getImage();
-    String getPhone();
+    String getEmail();
+
     Resume getResume();
     String getStatus();
     String getJobId();

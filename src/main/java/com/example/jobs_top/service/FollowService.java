@@ -1,8 +1,8 @@
 package com.example.jobs_top.service;
 
 import com.example.jobs_top.model.Follow;
-import com.example.jobs_top.model.RecruiterProfile;
-import com.example.jobs_top.model.User;
+import com.example.jobs_top.model.Company;
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.repository.FollowRepository;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.stereotype.Service;
@@ -12,29 +12,29 @@ import java.util.List;
 @Service
 public class FollowService {
     private final FollowRepository followRepository;
-    private final RecruiterProfileService recruiterProfileService;
+    private final CompanyService companyService;
 
-    public FollowService(FollowRepository followRepository, RecruiterProfileService recruiterProfileService) {
+    public FollowService(FollowRepository followRepository, CompanyService companyService) {
         this.followRepository = followRepository;
-        this.recruiterProfileService = recruiterProfileService;
+        this.companyService = companyService;
     }
 
-    public Follow getFollowByUserAndRecruiter(Long recruiterId) {
-        User user=Utils.getUserFromContext();
-        return followRepository.findByUserIdAndRecruiterId(user.getId(),recruiterId).orElse(null);
+    public Follow getFollowByAccountAndCompany(Long companyId) {
+        Account account=Utils.getAccount();
+        return followRepository.findByAccountIdAndCompanyId(account.getId(),companyId).orElseThrow(()->new RuntimeException("Not found follow"));
     }
 
 
 
-    public Follow followRecruiter(Long recruiterId){
-        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileById(recruiterId);
-        User user=Utils.getUserFromContext();
-        if(followRepository.existsByUserIdAndRecruiterId(user.getId(),recruiterId)){
+    public Follow followCompany(Long companyId){
+        Company company= companyService.getCompanyById(companyId);
+        Account account=Utils.getAccount();
+        if(followRepository.existsByAccountIdAndCompanyId(account.getId(),companyId)){
             throw new RuntimeException("Bạn đã follow công ty này rồi");
         }
         Follow follow=new Follow();
-        follow.setUser(Utils.getUserFromContext());
-        follow.setRecruiter(recruiterProfile);
+        follow.setAccount(account);
+        follow.setCompany(company);
         return followRepository.save(follow);
 
     }
@@ -43,8 +43,8 @@ public class FollowService {
 
     }
 
-    public List<RecruiterProfile> getFollowedCompaniesByUser() {
-        User user=Utils.getUserFromContext();
-        return followRepository.findFollowedCompaniesByUserId(user.getId());
+    public List<Company> getFollowedCompaniesByAccount() {
+        Account account=Utils.getAccount();
+        return followRepository.findFollowedCompaniesByAccountId(account.getId());
     }
 }

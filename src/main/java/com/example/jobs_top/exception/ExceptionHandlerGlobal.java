@@ -55,6 +55,13 @@ public class ExceptionHandlerGlobal {
     }
 
     @ResponseBody
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<BaseResponse> handlerIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new BaseResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+
+    @ResponseBody
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<BaseResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

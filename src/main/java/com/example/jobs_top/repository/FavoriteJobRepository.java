@@ -5,6 +5,7 @@ import com.example.jobs_top.model.FavoriteJob;
 import com.example.jobs_top.model.pk.FavoriteJobId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,16 +15,16 @@ public interface FavoriteJobRepository extends JpaRepository<FavoriteJob, Long> 
     @Query("""
         SELECT f.id AS id, j.id AS jobId, j.title AS title, j.requirements AS requirements, j.status AS status,
                j.salaryMin AS salaryMin, j.salaryMax AS salaryMax,
-               r.companyName AS companyName, j.city AS city, 
+               j.company.name AS companyName, j.city AS city,
+               j.views AS views,
                j.jobType AS jobType, j.experienceLevel AS experienceLevel
         FROM FavoriteJob f
         JOIN f.job j
-        JOIN f.user u
-        JOIN j.recruiterProfile r
-        WHERE u.id = :userId 
+        JOIN f.account a
+        WHERE a.id = :accountId
     """)
-    List<FavoriteJobView> findFavoriteJobByUserId(Long userId);
-    boolean existsByUserIdAndJobId(Long userId,Long jobId);
+    List<FavoriteJobView> findFavoriteJobByAccountId(@Param("accountId") Long accountId);
+    boolean existsByAccountIdAndJobId(Long accountId,Long jobId);
 
 
 }

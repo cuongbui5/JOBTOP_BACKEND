@@ -3,10 +3,10 @@ package com.example.jobs_top.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "_notification")
+@Table(name = "notifications")
 public class Notification extends BaseEntity{
     private String content;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",referencedColumnName = "id")
-    private User user;
+    @JoinColumn(name = "account_id",referencedColumnName = "id")
+    private Account account;
 }

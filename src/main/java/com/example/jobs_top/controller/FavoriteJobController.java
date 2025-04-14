@@ -3,6 +3,7 @@ package com.example.jobs_top.controller;
 import com.example.jobs_top.dto.res.ApiResponse;
 import com.example.jobs_top.model.FavoriteJob;
 import com.example.jobs_top.service.FavoriteJobService;
+import com.example.jobs_top.utils.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +17,11 @@ public class FavoriteJobController {
     }
 
     @GetMapping
-    public ResponseEntity<?> saveFavoriteJob() {
+    public ResponseEntity<?> getAllFavoriteJobs() {
         return ResponseEntity.ok().body(new ApiResponse<>(
                 200,
-                "success",
-                favoriteJobService.getAllFavoriteJobsByUser()));
+                Constants.SUCCESS_MESSAGE,
+                favoriteJobService.getAllFavoriteJobsByAccount()));
     }
 
 
@@ -35,6 +36,6 @@ public class FavoriteJobController {
     @DeleteMapping("/remove/{id}")
     public ResponseEntity<?> deleteFavoriteJob(@PathVariable Long id) {
         favoriteJobService.deleteFavoriteJob(id);
-        return ResponseEntity.ok().body(new ApiResponse<>(200,"success", null));
+        return ResponseEntity.ok().body(new ApiResponse<>(200,  Constants.SUCCESS_MESSAGE, null));
     }
 }

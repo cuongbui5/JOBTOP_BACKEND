@@ -5,6 +5,8 @@ public enum ApplicationStatus {
     VIEWED("Đã xem"),
     APPROVED("Được chấp nhận"),
     ADDED_TO_INTERVIEW("Đã thêm vào phỏng vấn"),
+    COMPLETED("Đã hoàn thành"),
+    NO_SHOW("Vắng mặt khi phỏng vấn"),
     REJECTED("Bị từ chối");
 
 

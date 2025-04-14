@@ -1,20 +1,19 @@
 package com.example.jobs_top.model;
 
-import com.example.jobs_top.model.enums.InterviewScheduleStatus;
+import com.example.jobs_top.model.enums.InterviewStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @Entity
-@Table(name = "_interview_schedule")
+@Table(name = "interview_schedules")
 public class InterviewSchedule extends BaseEntity{
-    private LocalDate interviewDate; // Lưu ngày phỏng vấn
+    private LocalDate interviewDate;
     private LocalTime startTime;
     private LocalTime endTime;
     @Enumerated(EnumType.STRING)
-    private InterviewScheduleStatus status;
+    private InterviewStatus status;
     private Long createdBy;
 
 
@@ -24,11 +23,11 @@ public class InterviewSchedule extends BaseEntity{
     private String officeAddress;
 
 
-    public InterviewScheduleStatus getStatus() {
+    public InterviewStatus getStatus() {
         return status;
     }
 
-    public void setStatus(InterviewScheduleStatus status) {
+    public void setStatus(InterviewStatus status) {
         this.status = status;
     }
 

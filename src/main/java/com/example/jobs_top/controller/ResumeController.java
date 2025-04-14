@@ -26,7 +26,7 @@ public class ResumeController {
     @GetMapping("/byUser")
     public ResponseEntity<?> getAllResumesByUser() {
         return ResponseEntity.ok().body(
-                new ApiResponse<>(201,"success",resumeService.getAllResumeByUser())
+                new ApiResponse<>(201,"success",resumeService.getAllResumeByAccount())
         );
     }
 

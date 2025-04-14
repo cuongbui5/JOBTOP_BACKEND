@@ -34,6 +34,8 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         SecurityContext securityContext=SecurityContextHolder.getContext();
+        String path = request.getRequestURI();
+
 
         if (securityContext.getAuthentication() == null || securityContext.getAuthentication() instanceof AnonymousAuthenticationToken) {
             try {

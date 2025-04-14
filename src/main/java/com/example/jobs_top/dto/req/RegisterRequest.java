@@ -1,9 +1,7 @@
 package com.example.jobs_top.dto.req;
 
-import com.example.jobs_top.model.Role;
+import com.example.jobs_top.model.enums.RoleType;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
@@ -11,17 +9,24 @@ public class RegisterRequest {
     private String email;
     @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 kí tự")
     private String password;
-    private Role role;
+    private RoleType role;
+    private String fullName;
 
-    public Role getRole() {
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public RoleType getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(RoleType role) {
         this.role = role;
     }
-
-
 
     public String getEmail() {
         return email;

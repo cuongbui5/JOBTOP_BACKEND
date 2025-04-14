@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "_report")
+@Table(name = "reports")
 public class Report extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @JoinColumn(name = "account_id",referencedColumnName = "id")
     @JsonIgnore
-    private User user;
+    private Account account;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id",referencedColumnName = "id")
     @JsonIgnore
@@ -25,12 +25,12 @@ public class Report extends BaseEntity {
         this.job = job;
     }
 
-    public User getUser() {
-        return user;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public String getReason() {

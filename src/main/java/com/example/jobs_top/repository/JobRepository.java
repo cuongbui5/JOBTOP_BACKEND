@@ -29,57 +29,40 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     @Transactional
     @Query("UPDATE Job j SET j.status = :status WHERE j.id = :jobId")
     int updateJobStatus(Long jobId, JobStatus status);
-    Page<Job> findByRecruiterProfileId(Long recruiterProfileId, Pageable pageable);
-    @EntityGraph(attributePaths = {"recruiterProfile.category", "industry", "tags"})
-    <T> Optional<T> findById(Long id,Class<T> type);
+
+    @EntityGraph(attributePaths = {"company"})
+    Optional<Job> findById(Long id);
+
+
+
+    @EntityGraph(attributePaths = {"company"})
     @Query("""
-        SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.status AS status,
-               j.salaryMin AS salaryMin, j.salaryMax AS salaryMax, 
-               r.companyName AS companyName, j.city AS city, 
-               j.jobType AS jobType, j.experienceLevel AS experienceLevel
+        SELECT j
         FROM Job j
-        JOIN j.recruiterProfile r
-        WHERE j.status = :status
+        WHERE (:status IS NULL OR j.status = :status)
+        AND (:createdBy IS NULL OR j.createdBy = :createdBy)
     """)
-    Page<JobCardView> findByStatus(@Param("status") JobStatus status, Pageable pageable);
-    @Query("""
-        SELECT j.id AS id, j.title AS title
-        FROM Job j
-        JOIN j.recruiterProfile r
-        WHERE r.id = :recruiterId
-    """)
-    List<JobTitleView> getAllJobTitleByRecruiterProfile(@Param("recruiterId") Long recruiterId);
-
-
-    @Query("""
-        SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.status AS status,
-               j.salaryMin AS salaryMin, j.salaryMax AS salaryMax, 
-               r.companyName AS companyName, j.city AS city, 
-               j.jobType AS jobType, j.experienceLevel AS experienceLevel
-        FROM Job j
-        JOIN j.recruiterProfile r
-    """)
-    Page<JobCardView> findAllJobs(Pageable pageable);
+    Page<Job> findAllJobs(Pageable pageable,@Param("status") JobStatus status,@Param("createdBy") Long createdBy);
 
 
 
-    @Query(value = "SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.status AS status, " +
+    /*@Query(value = "SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.status AS status, " +
             "j.salary_min AS salaryMin, j.salary_max AS salaryMax, " +
             "r.company_name AS companyName, j.city AS city, " +
             "j.job_type AS jobType, j.experience_level AS experienceLevel " +
             "FROM job j " +
             "JOIN _recruiter_profile r ON j.recruiter_profile_id = r.id " +
             "JOIN _favorite_job f ON j.id = f.job_id " +
-            "WHERE f.user_id = :userId", nativeQuery = true)
-    List<JobCardView> findFavoriteJobsByUserId(@Param("userId") Long userId);
+            "WHERE f.account_id = :accountId", nativeQuery = true)
+    List<JobCardView> findFavoriteJobsByUserId(@Param("accountId") Long accountId);*/
 
 
 
 
-    Job findByTitleAndRecruiterProfileCompanyName(String title, String recruiterProfileCompanyName);
+
     @Query(value = """
       SELECT j.city, COUNT(j.id) AS job_count
-                     FROM _job j
+                     FROM jobs j
                      WHERE j.status = 'APPROVED'
                      AND j.application_deadline > CURRENT_DATE
                      GROUP BY j.city
@@ -89,17 +72,18 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
 
     @Query("SELECT j.id AS id,j.title AS title, j.requirements AS requirements, j.salaryMin AS salaryMin, j.status AS status, " +
-            "j.salaryMax AS salaryMax, r.companyName AS companyName, j.city AS city, j.jobType AS jobType, " +
-            "j.experienceLevel AS experienceLevel " +
+            "j.salaryMax AS salaryMax, r.name AS companyName, j.city AS city, j.jobType AS jobType, " +
+            "j.experienceLevel AS experienceLevel, j.views AS views " +
             "FROM Job j " +
-            "JOIN j.recruiterProfile r "+
+            "JOIN j.company r "+
+            "JOIN r.category c "+
             "WHERE j.status = 'APPROVED' AND j.applicationDeadline > CURRENT_DATE AND " +
+            "(:categoryIds IS NULL OR c.id IN :categoryIds) AND " +
             "(:updatedAfter IS NULL OR j.updatedAt >= :updatedAfter) AND " +
             "(:salaryMin IS NULL OR :salaryMax IS NULL OR (j.salaryMin >= :salaryMin AND j.salaryMin <= :salaryMax)) AND " +
             "(:exp IS NULL OR j.experienceLevel = :exp) AND " +
             "(:jobType IS NULL OR j.jobType = :jobType) AND " +
             "(:companyId IS NULL OR r.id = :companyId) AND " +
-            "(:industryId IS NULL OR j.industry.id = :industryId) AND " +
             "(:keyword IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
             "(:city IS NULL OR j.city = :city)"
     )
@@ -110,30 +94,15 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             @Param("exp") ExperienceLevel exp,
             @Param("jobType") JobType jobType,
             @Param("companyId") Long companyId,
-            @Param("industryId") Long industryId,
             @Param("keyword") String keyword,
             @Param("city") String city,
+            @Param("categoryIds") List<Long> categoryIds,
             Pageable pageable
     );
 
-    @Query("SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.salaryMin AS salaryMin, j.status AS status, " +
-            "j.salaryMax AS salaryMax, r.companyName AS companyName, j.city AS city, j.jobType AS jobType, " +
-            "j.experienceLevel AS experienceLevel " +
-            "FROM Job j " +
-            "JOIN j.recruiterProfile r " +
-            "WHERE j.id <> :jobId " +
-            "AND (j.industry.id = :industryId " +
-            "OR j.city = :city " +
-            "OR j.jobType = :jobType " +
-            "OR j.experienceLevel = :experienceLevel)")
-    Page<JobCardView> findRelatedJobs(@Param("jobId") Long jobId,
-                                      @Param("industryId") Long industryId,
-                                      @Param("city") String city,
-                                      @Param("jobType") JobType jobType,
-                                      @Param("experienceLevel") ExperienceLevel experienceLevel,
-                                      Pageable pageable);
-
-
-
-
+    @Query("""
+             SELECT j.id AS id, j.title AS title FROM Job j
+             WHERE j.status = 'APPROVED' and j.createdBy=:accountId
+    """)
+    List<JobTitleView> getAllJobsTitle(@Param("accountId") Long accountId);
 }

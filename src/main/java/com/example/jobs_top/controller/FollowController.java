@@ -13,11 +13,11 @@ public class FollowController {
     public FollowController(FollowService followService) {
         this.followService = followService;
     }
-    @GetMapping("/{recruiterId}")
-    public ResponseEntity<?> getFollowByUserAndRecruiter(@PathVariable Long recruiterId) {
+    @GetMapping("/{companyId}")
+    public ResponseEntity<?> getFollowByUser(@PathVariable Long companyId) {
 
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"Success",followService.getFollowByUserAndRecruiter(recruiterId))
+                new ApiResponse<>(200,"Success",followService.getFollowByAccountAndCompany(companyId))
         );
     }
 
@@ -25,16 +25,16 @@ public class FollowController {
     public ResponseEntity<?> getAllCompanies() {
 
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"Success",followService.getFollowedCompaniesByUser())
+                new ApiResponse<>(200,"Success",followService.getFollowedCompaniesByAccount())
         );
     }
 
     // 2. Thực hiện theo dõi công ty
-    @PostMapping("/{recruiterId}")
-    public ResponseEntity<?> followRecruiter(@PathVariable Long recruiterId) {
+    @PostMapping("/{companyId}")
+    public ResponseEntity<?> followRecruiter(@PathVariable Long companyId) {
 
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"Success",followService.followRecruiter(recruiterId))
+                new ApiResponse<>(200,"Success",followService.followCompany(companyId))
         );
     }
 

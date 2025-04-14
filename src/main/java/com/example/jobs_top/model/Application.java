@@ -1,15 +1,19 @@
 package com.example.jobs_top.model;
 
 import com.example.jobs_top.model.enums.ApplicationStatus;
-import com.example.jobs_top.model.enums.ViewStatus;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "_application")
+@Table(name = "applications")
 public class Application extends BaseEntity{
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interview_schedule_id", referencedColumnName = "id")
+    @JsonIgnore
+    private InterviewSchedule interviewSchedule;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id",referencedColumnName = "id")
     @JsonIgnore
@@ -20,15 +24,17 @@ public class Application extends BaseEntity{
     private Resume resume;
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id",referencedColumnName = "id")
+    @JsonIgnore
+    private Account account;
 
-    private Long userId;
-
-    public Long getUserId() {
-        return userId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public Resume getResume() {
@@ -39,9 +45,13 @@ public class Application extends BaseEntity{
         this.resume = resume;
     }
 
+    public InterviewSchedule getInterviewSchedule() {
+        return interviewSchedule;
+    }
 
-
-
+    public void setInterviewSchedule(InterviewSchedule interviewSchedule) {
+        this.interviewSchedule = interviewSchedule;
+    }
 
     public ApplicationStatus getStatus() {
         return status;

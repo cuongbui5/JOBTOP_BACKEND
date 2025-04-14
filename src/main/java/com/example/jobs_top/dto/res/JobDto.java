@@ -1,17 +1,12 @@
 package com.example.jobs_top.dto.res;
 
-import com.example.jobs_top.model.Industry;
 import com.example.jobs_top.model.Job;
-import com.example.jobs_top.model.RecruiterProfile;
-import com.example.jobs_top.model.Tag;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
 import com.example.jobs_top.model.enums.JobType;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 public class JobDto {
     private Long id;
@@ -28,10 +23,29 @@ public class JobDto {
     private LocalDate applicationDeadline;
     private String workSchedule;
     private String city;
+    private Integer views;
+
+    private CompanyDto company=new CompanyDto();
+
+
+    public CompanyDto getCompany() {
+        return company;
+    }
+
+    public void setCompany(CompanyDto company) {
+        this.company = company;
+    }
+
 
 
     public JobDto(Job job) {
         BeanUtils.copyProperties(job, this);
+        if(job.getCompany()!=null){
+            BeanUtils.copyProperties(job.getCompany(), company);
+        }
+
+
+
 
     }
 
@@ -147,5 +161,13 @@ public class JobDto {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public Integer getViews() {
+        return views;
+    }
+
+    public void setViews(Integer views) {
+        this.views = views;
     }
 }

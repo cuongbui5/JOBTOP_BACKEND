@@ -1,7 +1,6 @@
 package com.example.jobs_top.model;
 
 import com.example.jobs_top.model.enums.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -10,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "_job")
+@Table(name = "jobs")
 public class Job extends BaseEntity{
     private String title;
     private String location;
@@ -26,33 +25,42 @@ public class Job extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private ExperienceLevel experienceLevel;
     @Enumerated(EnumType.STRING)
-    private JobStatus status;
+    private JobStatus status=JobStatus.PENDING;
     private Integer salaryMin;
     private Integer salaryMax;
     private LocalDate applicationDeadline;
     private String workSchedule;
+    private Integer views=0;
+    private Long createdBy;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recruiter_profile_id",referencedColumnName = "id")
+    @JoinColumn(name = "company_id",referencedColumnName = "id")
     @JsonIgnore
-    private RecruiterProfile recruiterProfile;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "industry_id",referencedColumnName = "id")
-    private Industry industry;
+    private Company company;
 
 
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "_job_tag",
-            joinColumns = @JoinColumn(name = "job_id",referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id",referencedColumnName = "id")
-    )
+    public void increaseViews() {
+        this.views++;
+    }
 
 
-    private Set<Tag> tags = new HashSet<>();
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Integer getViews() {
+        return views;
+    }
+
+    public void setViews(Integer views) {
+        this.views = views;
+    }
 
     public String getCity() {
         return city;
@@ -94,13 +102,7 @@ public class Job extends BaseEntity{
         this.salaryMax = salaryMax;
     }
 
-    public Industry getIndustry() {
-        return industry;
-    }
 
-    public void setIndustry(Industry industry) {
-        this.industry = industry;
-    }
 
     public String getWorkSchedule() {
         return workSchedule;
@@ -110,13 +112,7 @@ public class Job extends BaseEntity{
         this.workSchedule = workSchedule;
     }
 
-    public Set<Tag> getTags() {
-        return tags;
-    }
 
-    public void setTags(Set<Tag> tags) {
-        this.tags = tags;
-    }
 
     public String getTitle() {
         return title;
@@ -177,13 +173,11 @@ public class Job extends BaseEntity{
         this.applicationDeadline = applicationDeadline;
     }
 
-    public RecruiterProfile getRecruiterProfile() {
-        return recruiterProfile;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setRecruiterProfile(RecruiterProfile recruiterProfile) {
-        this.recruiterProfile = recruiterProfile;
+    public void setCompany(Company company) {
+        this.company = company;
     }
-
-
 }

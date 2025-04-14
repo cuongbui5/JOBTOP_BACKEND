@@ -1,23 +1,22 @@
 package com.example.jobs_top.dto.res;
 
-import com.example.jobs_top.model.User;
-import org.hibernate.query.sql.internal.ParameterRecognizerImpl;
+import com.example.jobs_top.model.Account;
 
 public class LoginResponse{
-    private User user;
+    private Account account;
     private String token;
 
-    public LoginResponse(User user, String token) {
-        this.user = user;
+    public LoginResponse(Account account, String token) {
+        this.account = account;
         this.token = token;
     }
 
-    public User getUser() {
-        return user;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public String getToken() {

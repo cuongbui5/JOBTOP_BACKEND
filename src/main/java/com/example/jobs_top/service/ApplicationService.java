@@ -1,105 +1,59 @@
 package com.example.jobs_top.service;
 
+import com.example.jobs_top.dto.req.AddToInterviewRequest;
 import com.example.jobs_top.dto.req.ApplyRequest;
-import com.example.jobs_top.dto.res.JobDetailResponse;
+import com.example.jobs_top.dto.res.ApplicationStatisticsDTO;
+import com.example.jobs_top.dto.res.ApplicationStatusStatsDTO;
 import com.example.jobs_top.dto.res.PaginatedResponse;
 import com.example.jobs_top.dto.view.ApplicationRecruiterView;
+import com.example.jobs_top.dto.view.ApplicationUserView;
+import com.example.jobs_top.exception.NotFoundException;
 import com.example.jobs_top.model.*;
 import com.example.jobs_top.model.enums.ApplicationStatus;
-import com.example.jobs_top.model.enums.ViewStatus;
 import com.example.jobs_top.repository.ApplicationRepository;
+import com.example.jobs_top.repository.InterviewScheduleRepository;
 import com.example.jobs_top.repository.JobRepository;
 import com.example.jobs_top.repository.ResumeRepository;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ApplicationService {
     private final ApplicationRepository applicationRepository;
-    private final JobService jobService;
     private final ResumeRepository resumeRepository;
     private final JobRepository jobRepository;
-    private final RecruiterProfileService recruiterProfileService;
+    private final CompanyService companyService;
+    private final InterviewScheduleRepository interviewScheduleRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository, JobService jobService, UserProfileService userProfileService, ResumeService resumeService, ResumeRepository resumeRepository, JobRepository jobRepository, RecruiterProfileService recruiterProfileService) {
+    public ApplicationService(ApplicationRepository applicationRepository, ResumeRepository resumeRepository, JobRepository jobRepository, CompanyService companyService, InterviewScheduleRepository interviewScheduleRepository) {
         this.applicationRepository = applicationRepository;
-        this.jobService = jobService;
         this.resumeRepository = resumeRepository;
-
         this.jobRepository = jobRepository;
-        this.recruiterProfileService = recruiterProfileService;
+        this.companyService = companyService;
+        this.interviewScheduleRepository = interviewScheduleRepository;
     }
-
-    public Application applyForJob(Long jobId) {
-        /*JobDetailResponse job = jobService.getJobById(jobId);
-        if(job.getApplicationDeadline().isBefore(LocalDate.now())|| job.getApplicationDeadline().isEqual(LocalDate.now())){
-            throw new RuntimeException("Thời gian ứng tuyển vị trí này đã kết thúc!");
-        }
-        User user= Utils.getUserFromContext();
-        //UserProfile userProfile=userProfileService.getUserProfileByUserId(user.getId());
-        UserProfile userProfile=null;
-
-        if(userProfile.getResume()==null){
-            throw new RuntimeException("Bạn chưa thể ứng tuyển được do chưa có đầy đủ thông tin! Vui lòng upload thông tin cv của bạn.");
-        }
-        Application application = new Application();
-        application.setUserProfile(userProfile);
-        application.setJob(job);
-        application.setStatus(ApplicationStatus.APPLIED); // Đặt trạng thái ban đầu là "APPLIED"
-        return applicationRepository.save(application);*/
-        return null;
-    }
-
-    @Transactional
-    public Application applyForJob(String username,String jobTitle,String companyName) {
-
-        /*Job job = jobService.findJobByTitleAndCompany(jobTitle,companyName);
-        if(job.getApplicationDeadline().isBefore(LocalDate.now())|| job.getApplicationDeadline().isEqual(LocalDate.now())){
-            throw new RuntimeException("Thời gian ứng tuyển vị trí này đã kết thúc!");
-        }
-
-        //UserProfile userProfile=userProfileService.getUserProfileByUsername(username);
-        UserProfile userProfile=new UserProfile();
-        if(userProfile.getResume()==null){
-            throw new RuntimeException("Bạn chưa thể ứng tuyển được do chưa có đầy đủ thông tin! Vui lòng upload thông tin cv của bạn.");
-        }
-
-        Application application = new Application();
-        application.setUserProfile(userProfile);
-        application.setJob(job);
-        application.setStatus(ApplicationStatus.APPLIED); // Đặt trạng thái ban đầu là "APPLIED"
-        return applicationRepository.save(application);*/
-        return null;
-    }
-
-
-
-
-
 
 
     @Transactional
     public Application applyJob(ApplyRequest applyRequest) {
-        User user=Utils.getUserFromContext();
+        Account account=Utils.getAccount();
         Optional<Application> applicationOptional=applicationRepository
-                .findByJobIdAndUserIdOrderByCreatedAtDesc(applyRequest.getJobId(), user.getId());
+                .findByJobIdAndAccountIdOrderByCreatedAtDesc(applyRequest.getJobId(), account.getId());
 
         if(applicationOptional.isPresent()){
             Application application=applicationOptional.get();
             long daysBetween = ChronoUnit.DAYS.between(application.getCreatedAt(), ZonedDateTime.now());
             if (daysBetween<7){
                 long remainingDays = 7 - daysBetween;
-                throw new RuntimeException("Bạn cần đợi thêm " + remainingDays + " ngày trước khi có thể ứng tuyển lại. Cảm ơn bạn đã quan tâm!");
+                throw new IllegalArgumentException("Bạn cần đợi thêm " + remainingDays + " ngày trước khi có thể ứng tuyển lại. Cảm ơn bạn đã quan tâm!");
             }
         }
         Job job=jobRepository.findById(applyRequest.getJobId()).orElseThrow(()->new RuntimeException("Not found job"));
@@ -108,42 +62,31 @@ public class ApplicationService {
         application.setJob(job);
         application.setResume(resume);
         application.setStatus(ApplicationStatus.PENDING);
-        application.setUserId(user.getId());
+        application.setAccount(account);
         return applicationRepository.save(application);
 
     }
 
-    public List<?> getAppliedJobs() {
-        User user=Utils.getUserFromContext();
-        return applicationRepository.findAppliedJobsByUser(user.getId());
-    }
-
-
-
-    public PaginatedResponse<?> getAllApplicationsByRecruiter(int page,int size,String status) {
-        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
-        Pageable pageable= PageRequest.of(page-1,5);
-        ApplicationStatus statusEnum=null;
-        if(status!=null){
-            statusEnum=ApplicationStatus.valueOf(status);
-        }
-
-        Page<ApplicationRecruiterView> recruiterViewPage= applicationRepository
-                .findAppliedJobsByRecruiterProfileId(recruiterProfile.getId(),statusEnum,pageable);
+    public PaginatedResponse<ApplicationUserView> getAppliedJobs(int page,int size, ApplicationStatus status) {
+        Account account=Utils.getAccount();
+        Pageable pageable=PageRequest.of(page-1,size,Sort.by("updatedAt").descending());
+        Page<ApplicationUserView> applicationUserViewPage= applicationRepository.findAppliedJobsByAccount(account.getId(),status,pageable);
         return new PaginatedResponse<>(
-                recruiterViewPage.getContent(),
-                recruiterViewPage.getTotalPages(),
+                applicationUserViewPage.getContent(),
+                applicationUserViewPage.getTotalPages(),
                 page,
-                recruiterViewPage.getTotalElements()
+                applicationUserViewPage.getTotalElements()
         );
     }
+
+
 
     public Application getApplication(Long applicationId) {
         return applicationRepository.findById(applicationId).orElseThrow(()->new RuntimeException("Application not found"));
     }
 
     public Application viewApplication(Long id) {
-        Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
+        Application application=getApplication(id);
         application.setStatus(ApplicationStatus.VIEWED);
         return applicationRepository.save(application);
     }
@@ -151,38 +94,135 @@ public class ApplicationService {
 
 
     public Application rejectApplication(Long id) {
-        Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
-        application.setStatus(ApplicationStatus.REJECTED);
-        return applicationRepository.save(application);
+        Application application=getApplication(id);
+        ApplicationStatus status=application.getStatus();
+        if(status!=ApplicationStatus.ADDED_TO_INTERVIEW&&status!=ApplicationStatus.COMPLETED){
+            application.setStatus(ApplicationStatus.REJECTED);
+            return applicationRepository.save(application);
+
+        }
+        throw new IllegalArgumentException("Hành động không hợp lệ");
+
     }
 
     public Application approveApplication(Long id) {
         Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
-        application.setStatus(ApplicationStatus.APPROVED);
-        return applicationRepository.save(application);
-    }
+        ApplicationStatus status=application.getStatus();
+        if(status!=ApplicationStatus.COMPLETED){
+            application.setStatus(ApplicationStatus.APPROVED);
+            return applicationRepository.save(application);
 
-    public List<ApplicationRecruiterView> getAllApplicationsByFilter( String status, Long jobId) {
-        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
-        ApplicationStatus statusEnum=null;
-        if(status!=null){
-            statusEnum=ApplicationStatus.valueOf(status);
         }
-        return applicationRepository.findApplicationByFilter(recruiterProfile.getId(),statusEnum,jobId);
+        throw new IllegalArgumentException("Hành động không hợp lệ");
+
+    }
+
+    public PaginatedResponse<ApplicationRecruiterView> getAllApplicationsByFilter(int page,int size,Long scheduleId,Long jobId,ApplicationStatus status) {
+        Pageable pageable=PageRequest.of(page-1,size, Sort.by("createdAt").descending());
+        if(scheduleId!=null){
+            Page<ApplicationRecruiterView> viewPage= applicationRepository.findByScheduleId(scheduleId,pageable);
+            return new PaginatedResponse<>(
+                    viewPage.getContent(),
+                    viewPage.getTotalPages(),
+                    page,
+                    viewPage.getTotalElements()
+            );
+        }
+
+        Account account=Utils.getAccount();
+
+        Company company= companyService.getCompanyByAccount(account);
+        Page<ApplicationRecruiterView> viewPage= applicationRepository.findApplicationByFilter(company.getId(),jobId,status,pageable);
+        return new PaginatedResponse<>(
+          viewPage.getContent(),
+          viewPage.getTotalPages(),
+          page,
+          viewPage.getTotalElements()
+        );
+
+
+    }
+
+    public void addToInterview(Long interviewId, AddToInterviewRequest addToInterviewRequest) {
+        InterviewSchedule interviewSchedule=interviewScheduleRepository.findById(interviewId)
+                .orElseThrow(()->new NotFoundException("Not found interview schedule"));
+        List<Application> applications= getApplicationsInIds(addToInterviewRequest);
+
+        applications.forEach(a->{
+            a.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
+            a.setInterviewSchedule(interviewSchedule);
+        });
+
+        applicationRepository.saveAll(applications);
 
 
     }
 
 
-    /*@Transactional
-    public Application withdrawApplication(String username, String jobName, String companyName) {
-        Application application=getApplicationDetails(username,jobName,companyName);
-        application.setStatus(ApplicationStatus.WITHDRAWN);
-        return applicationRepository.save(application);
+
+
+    public void removeFromInterview(AddToInterviewRequest removeRequest) {
+        List<Application> applications= getApplicationsInIds(removeRequest);
+        applications.forEach(app -> {
+            app.setInterviewSchedule(null);
+            app.setStatus(ApplicationStatus.REJECTED);
+        });
+
+        applicationRepository.saveAll(applications);
     }
 
-    @Transactional
-    public Application getApplicationDetails(String username, String jobName, String companyName) {
-        return applicationRepository.findLatestApplicationByCriteria(companyName, jobName,username);
-    }*/
+    private List<Application> getApplicationsInIds(AddToInterviewRequest removeRequest) {
+        List<Long> applicationIds = removeRequest.getApplicationIds();
+        List<Application> applications = applicationRepository.findAllByIdIn(applicationIds);
+
+        if (applications.isEmpty()) {
+            throw new IllegalArgumentException("Not found any application");
+        }
+
+        if (applications.size() != applicationIds.size()) {
+            throw new IllegalArgumentException("Some applications not found for provided IDs");
+        }
+        return applications;
+    }
+
+
+    public void markNoShowApplicants(AddToInterviewRequest addToInterviewRequest) {
+        List<Application> applications= getApplicationsInIds(addToInterviewRequest);
+        applications.forEach(app -> {
+            app.setStatus(ApplicationStatus.NO_SHOW);
+        });
+
+        applicationRepository.saveAll(applications);
+    }
+
+    public ApplicationStatisticsDTO getApplicationStatistics(Long jobId) {
+        List<Object[]> result = applicationRepository.countApplicationsByStatusWithTotal(jobId);
+
+        Map<String, Long> resultMap = new HashMap<>();
+        long total = 0;
+
+        for (Object[] row : result) {
+            String status = (String) row[0];
+            long count = ((Number) row[1]).longValue();
+
+            if ("TOTAL".equals(status)) {
+                total = count;
+            } else {
+                resultMap.put(status, count);
+            }
+        }
+
+        List<ApplicationStatusStatsDTO> stats = new ArrayList<>();
+        for (ApplicationStatus statusEnum : ApplicationStatus.values()) {
+            String statusStr = statusEnum.name();
+            stats.add(new ApplicationStatusStatsDTO(
+                    statusStr,
+                    resultMap.getOrDefault(statusStr, 0L)
+            ));
+        }
+
+        return new ApplicationStatisticsDTO(jobId, total, stats);
+    }
+
+
 }

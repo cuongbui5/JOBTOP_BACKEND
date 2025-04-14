@@ -1,20 +1,13 @@
 package com.example.jobs_top.dto.res;
 
-import com.example.jobs_top.model.Industry;
 import com.example.jobs_top.model.Job;
-import com.example.jobs_top.model.RecruiterProfile;
-import com.example.jobs_top.model.Tag;
+import com.example.jobs_top.model.Company;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
 import com.example.jobs_top.model.enums.JobType;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 public class JobDetailResponse {
     private Long id;
@@ -30,10 +23,9 @@ public class JobDetailResponse {
     private Integer salaryMax;
     private LocalDate applicationDeadline;
     private String workSchedule;
-    private Industry industry;
     private String city;
-    private RecruiterProfile recruiterProfile;
-    private Set<Tag> tags = new HashSet<>();
+    private Company recruiterProfile;
+
     public JobDetailResponse(Job job) {
         BeanUtils.copyProperties(job, this);
     }
@@ -54,11 +46,11 @@ public class JobDetailResponse {
 
 
 
-    public RecruiterProfile getRecruiterProfile() {
+    public Company getRecruiterProfile() {
         return recruiterProfile;
     }
 
-    public void setRecruiterProfile(RecruiterProfile recruiterProfile) {
+    public void setRecruiterProfile(Company recruiterProfile) {
         this.recruiterProfile = recruiterProfile;
     }
 
@@ -167,19 +159,7 @@ public class JobDetailResponse {
     }
 
 
-    public Industry getIndustry() {
-        return industry;
-    }
 
-    public void setIndustry(Industry industry) {
-        this.industry = industry;
-    }
 
-    public Set<Tag> getTags() {
-        return tags;
-    }
 
-    public void setTags(Set<Tag> tags) {
-        this.tags = tags;
-    }
 }

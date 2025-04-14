@@ -8,6 +8,7 @@ import com.example.jobs_top.security.jwt.JwtFilter;
 import com.example.jobs_top.security.MyUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -63,7 +64,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        String[] apiPublic={"/categories","/industries","/auth/**","/tags","/public/**"};
+        String[] apiPublic={"/categories","/auth/**","/public/**","/ws/**"};
 
 
 
@@ -74,6 +75,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> {
                             //a.requestMatchers("/admin/**").hasAuthority("ADMIN");
                             //a.requestMatchers("/api/auth/**","/api/forgotPassword/**").permitAll();
+                            request.requestMatchers(HttpMethod.GET,"/jobs/*").permitAll();
                             request.requestMatchers(apiPublic).permitAll();
                             request.anyRequest().authenticated();
                         }

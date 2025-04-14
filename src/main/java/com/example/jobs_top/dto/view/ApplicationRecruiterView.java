@@ -12,12 +12,11 @@ public interface ApplicationRecruiterView {
     Long getId();
     Long getJobId();
     Long getUserId();
+    String
+    getEmail();
     ApplicationStatus getStatus();
-    String getImage();
-    String getPhone();
     Resume getResume();
     String getJobTitle();
-    String getFullName();
     LocalDate getApplicationDeadline();
     ZonedDateTime getCreatedAt();
     ZonedDateTime getUpdatedAt();

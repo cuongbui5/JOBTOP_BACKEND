@@ -1,23 +1,23 @@
 package com.example.jobs_top.service;
 
+import com.example.jobs_top.dto.req.UpdateJobStatusRequest;
 import com.example.jobs_top.dto.res.*;
 import com.example.jobs_top.dto.view.JobCardView;
-import com.example.jobs_top.dto.view.JobDetailView;
-import com.example.jobs_top.dto.view.RecruiterProfileView;
 import com.example.jobs_top.model.*;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
 import com.example.jobs_top.model.enums.JobType;
 import com.example.jobs_top.repository.JobRepository;
-import com.example.jobs_top.repository.RecruiterProfileRepository;
 import com.example.jobs_top.utils.Utils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -25,48 +25,35 @@ import java.util.*;
 @Service
 public class JobService {
     private final JobRepository jobRepository;
-    private final RecruiterProfileService recruiterProfileService;
-    private final RecruiterProfileRepository recruiterProfileRepository;
+    private final CompanyService companyService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ElasticService elasticService;
 
-    public JobService(JobRepository jobRepository, RecruiterProfileService recruiterProfileService, RecruiterProfileRepository recruiterProfileRepository) {
+    public JobService(JobRepository jobRepository, CompanyService companyService, RedisTemplate<String, Object> redisTemplate, ElasticService elasticService) {
         this.jobRepository = jobRepository;
-        this.recruiterProfileService = recruiterProfileService;
-        this.recruiterProfileRepository = recruiterProfileRepository;
+        this.companyService = companyService;
+        this.redisTemplate = redisTemplate;
+        this.elasticService = elasticService;
     }
 
 
-    @Transactional
-    public void approveJob(Long jobId) {
-        int updatedRows = jobRepository.updateJobStatus(jobId, JobStatus.APPROVED);
-        if (updatedRows == 0) {
-            throw new RuntimeException("Job not found or update failed");
-        }
+
+    public Job createJob(Job job){
+        Account account=Utils.getAccount();
+        Company company = companyService.getCompanyByAccount(account);
+        job.setCompany(company);
+        job.setStatus(JobStatus.PENDING);
+        job.setViews(0);
+        job.setCreatedBy(account.getId());
+        return jobRepository.save(job);
+
+
     }
 
     @Transactional
-    public void rejectJob(Long jobId) {
-        int updatedRows = jobRepository.updateJobStatus(jobId, JobStatus.REJECTED);
-        if (updatedRows == 0) {
-            throw new RuntimeException("Job not found or update failed");
-        }
-    }
-
-    @Transactional
-    public Job saveJob(Job job) {
-        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
-        if(job.getId() == null) {
-            job.setRecruiterProfile(recruiterProfile);
-            job.setStatus(JobStatus.PENDING);
-            return jobRepository.save(job);
-
-        }
-        Job jobUpdated=jobRepository.findById(job.getId()).get();
-        if(!jobUpdated.getRecruiterProfile().equals(recruiterProfile)) {
-            throw new RuntimeException("You are not allowed to change the job's recruiterProfile");
-        }
-        System.out.println(job.getJobType());
+    public Job updateJob(Long jobId, Job job){
+        Job jobUpdated=jobRepository.findById(jobId).orElseThrow(()->new RuntimeException("Job not found"));
         jobUpdated.setTitle(job.getTitle());
-        jobUpdated.setStatus(job.getStatus());
         jobUpdated.setDescription(job.getDescription());
         jobUpdated.setExperienceLevel(job.getExperienceLevel());
         jobUpdated.setJobType(job.getJobType());
@@ -75,25 +62,18 @@ public class JobService {
         jobUpdated.setSalaryMax(job.getSalaryMax());
         jobUpdated.setSalaryMin(job.getSalaryMin());
         jobUpdated.setBenefits(job.getBenefits());
-        jobUpdated.setIndustry(job.getIndustry());
         jobUpdated.setLocation(job.getLocation());
         jobUpdated.setRequirements(job.getRequirements());
-        jobUpdated.getTags().clear();
-        jobUpdated.getTags().addAll(job.getTags());
         jobUpdated.setCity(job.getCity());
-        return jobRepository.save(jobUpdated);
+        Job jobSaved= jobRepository.save(jobUpdated);
+        if(jobSaved.getStatus()==JobStatus.APPROVED){
+            elasticService.upsertJobDocument(jobSaved);
+        }
+        return jobSaved;
     }
 
 
-    /*public List<JobCountDto> getJobCountByIndustry() {
-        return jobRepository.countJobsByIndustry();
-    }
 
-
-
-    public List<RecruiterJobCountDto> getJobCountByRecruiter() {
-        return jobRepository.countJobsByRecruiter();
-    }*/
     public List<JobCountDto> getJobCountByLocation() {
         List<Object[]> results = jobRepository.countJobsByLocation();
         return results.stream()
@@ -103,49 +83,17 @@ public class JobService {
 
 
 
-    public JobDetailView getJobById(Long id) {
-        //System.out.println(job.getIndustry().getName());
-        return jobRepository.findById(id,JobDetailView.class)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with id: " + id));
 
+    public PaginatedResponse<?> getAllJobs(int page, int size,JobStatus status,Long createdBy) {
+        Pageable pageable=PageRequest.of(page-1,size,Sort.by("createdAt").descending());
+        Page<Job> jobPage=jobRepository.findAllJobs(pageable,status,createdBy);
+        List<JobDto> results=jobPage.getContent().stream().map(JobDto::new).toList();
+        return new PaginatedResponse<>(
+                results,
+                jobPage.getTotalPages(),
+                page,
+                jobPage.getTotalElements());
     }
-
-
-    public Job findJobByTitleAndCompany(String title, String company) {
-        return jobRepository.findByTitleAndRecruiterProfileCompanyName(title, company);
-    }
-
-
-    public PaginatedResponse<?> getAllJobs(int page, int size,String status) {
-        Pageable pageable=PageRequest.of(page-1,size);
-        Page<JobCardView> jobPage;
-        System.out.println(status);
-        if (!Objects.equals(status, "")) {
-            JobStatus jobStatus = JobStatus.valueOf(status.toUpperCase());
-            jobPage = jobRepository.findByStatus(jobStatus,pageable);
-        } else {
-            jobPage = jobRepository.findAllJobs(pageable);
-        }
-        return new PaginatedResponse<>(jobPage.getContent(),jobPage.getTotalPages(),page,jobPage.getTotalElements());
-    }
-    public PaginatedResponse<?> getAllJobsByUser(int page, int size) {
-
-        User user=Utils.getUserFromContext();
-        Long recruiterId=recruiterProfileRepository.getRecruiterProfileIdByUserId(user.getId());
-        if(recruiterId==null){
-            throw new IllegalArgumentException("Bạn phải cập nhật thông tin hồ sơ trước!");
-        }
-
-        Pageable pageable=PageRequest.of(page-1,size);
-        Page<Job> jobPage = jobRepository.findByRecruiterProfileId(recruiterId,pageable);
-        return new PaginatedResponse<>(jobPage.getContent().stream().map(JobDto::new).toList(),jobPage.getTotalPages(),page,jobPage.getTotalElements());
-    }
-
-    public List<?> getAllJobTitleByRecruiterProfile() {
-        RecruiterProfile recruiterProfile=recruiterProfileService.getRecruiterProfileByUser(RecruiterProfile.class);
-        return jobRepository.getAllJobTitleByRecruiterProfile(recruiterProfile.getId());
-    }
-
 
 
 
@@ -153,6 +101,8 @@ public class JobService {
 
     public void deleteJob(Long id) {
          jobRepository.deleteById(id);
+         elasticService.deleteJobDocument(id);
+
     }
 
     public PaginatedResponse<?> getAllJobsView(int page,
@@ -162,14 +112,14 @@ public class JobService {
                                                String exp,
                                                String jobType,
                                                Long companyId,
-                                               Long industryId,
                                                String keyword,
                                                String city,
-                                               String sortBy) {
+                                               String sortBy,
+                                               List<Long> categoryIds) {
 
 
-        Integer salaryMin = null;
-        Integer salaryMax = null;
+        Integer salaryMin;
+        Integer salaryMax;
         if(salaryRange!=null){
             switch (salaryRange) {
                 case "below_10m":
@@ -211,9 +161,9 @@ public class JobService {
         ExperienceLevel expEnum = (exp != null) ? ExperienceLevel.valueOf(exp) : null;
         Pageable pageable;
         if ("date_asc".equals(sortBy)) {
-            pageable = PageRequest.of(page - 1, size, Sort.by("updatedAt").ascending());
+            pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
         } else {
-            pageable = PageRequest.of(page - 1, size, Sort.by("updatedAt").descending());
+            pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         }
 
 
@@ -221,7 +171,16 @@ public class JobService {
 
 
 
-        Page<JobCardView> jobPage = jobRepository.findAllWithFilters(updatedAfter, salaryMin, salaryMax, expEnum, jobTypeEnum, companyId, industryId, keyword, city, pageable);
+        Page<JobCardView> jobPage = jobRepository.findAllWithFilters(updatedAfter,
+                salaryMin,
+                salaryMax,
+                expEnum,
+                jobTypeEnum,
+                companyId,
+                keyword,
+                city,
+                categoryIds,
+                pageable);
 
 
         return new PaginatedResponse<>(
@@ -233,22 +192,47 @@ public class JobService {
     }
 
 
-    public List<JobCardView> getFavoriteJobs() {
-        User user= Utils.getUserFromContext();
-        return jobRepository.findFavoriteJobsByUserId(user.getId());
+
+    public String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        } else {
+            // Trường hợp có nhiều IP (qua proxy), lấy IP đầu tiên
+            ip = ip.split(",")[0];
+        }
+        return ip;
     }
 
 
-    public PaginatedResponse<?> getRelatedJobs(Long id,int page,int size) {
+    public JobDto getJobById(Long id, HttpServletRequest request,boolean view) {
+        String ip = getClientIp(request);
+        String redisKey = "job:viewed:" + id + ":" + ip;
         Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
-        Pageable pageable = PageRequest.of(page-1,size);
-        Page<JobCardView> jobPage=jobRepository.findRelatedJobs(id, job.getIndustry().getId(), job.getCity(), job.getJobType(), job.getExperienceLevel(), pageable);
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(redisKey))&&view) {
+            job.increaseViews();
+            jobRepository.save(job);
+            redisTemplate.opsForValue().set(redisKey, true, Duration.ofHours(2));
 
-        return new PaginatedResponse<>(
-                jobPage.getContent(),
-                jobPage.getTotalPages(),
-                page,
-                jobPage.getTotalElements()
-        );
+        }
+        return new JobDto(job);
+
+    }
+
+    @Transactional
+    public Job updateJobStatus(Long id, UpdateJobStatusRequest updateJobStatusRequest) {
+        Job job= jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+        job.setStatus(updateJobStatusRequest.getStatus());
+        Job savedJob = jobRepository.save(job);
+        if (updateJobStatusRequest.getStatus() == JobStatus.APPROVED) {
+            elasticService.upsertJobDocument(savedJob);
+        }
+
+        return savedJob;
+    }
+
+    public List<?> getAllJobsTitle() {
+        Account account=Utils.getAccount();
+        return jobRepository.getAllJobsTitle(account.getId());
     }
 }

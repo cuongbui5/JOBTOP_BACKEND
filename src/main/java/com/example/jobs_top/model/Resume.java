@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "_resume")
+@Table(name = "resumes")
 public class Resume extends BaseEntity{
     private String name;
     private String link;
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
-    @JoinColumn(name = "user_id",referencedColumnName = "id")
-    private User user;
+    @JoinColumn(name = "account_id",referencedColumnName = "id")
+    private Account account;
 
     public String getName() {
         return name;
@@ -29,11 +29,11 @@ public class Resume extends BaseEntity{
         this.link = link;
     }
 
-    public User getUser() {
-        return user;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

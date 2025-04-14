@@ -1,12 +1,7 @@
 package com.example.jobs_top.model.pk;
 
-import com.example.jobs_top.model.Job;
-import com.example.jobs_top.model.RecruiterProfile;
-import com.example.jobs_top.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 
 import java.io.Serializable;
 import java.util.Objects;

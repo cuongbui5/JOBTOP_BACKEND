@@ -3,10 +3,11 @@ package com.example.jobs_top.service;
 import com.example.jobs_top.dto.req.CreateReview;
 import com.example.jobs_top.dto.res.PaginatedResponse;
 import com.example.jobs_top.dto.view.ReviewView;
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.model.InterviewReview;
-import com.example.jobs_top.model.InterviewSlot;
+import com.example.jobs_top.model.InterviewSchedule;
 import com.example.jobs_top.repository.InterviewReviewRepository;
-import com.example.jobs_top.repository.InterviewSlotRepository;
+import com.example.jobs_top.repository.InterviewScheduleRepository;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,30 +22,32 @@ import java.util.Map;
 @Service
 public class InterviewReviewService {
     private final InterviewReviewRepository interviewReviewRepository;
-    private final InterviewSlotRepository interviewSlotRepository;
+    private final InterviewScheduleRepository interviewScheduleRepository;
 
-    public InterviewReviewService(InterviewReviewRepository interviewReviewRepository, InterviewSlotRepository interviewSlotRepository) {
+    public InterviewReviewService(InterviewReviewRepository interviewReviewRepository, InterviewScheduleRepository interviewScheduleRepository) {
         this.interviewReviewRepository = interviewReviewRepository;
-        this.interviewSlotRepository = interviewSlotRepository;
+        this.interviewScheduleRepository = interviewScheduleRepository;
     }
+
+
     @Transactional
     public InterviewReview save(CreateReview createReview) {
-        InterviewSlot slot=interviewSlotRepository.findById(createReview.getSlotId()).orElseThrow(()->new RuntimeException("No slot found"));
+        InterviewSchedule interviewSchedule=interviewScheduleRepository
+                .findById(createReview.getInterviewScheduleId())
+                .orElseThrow(()->new RuntimeException("Not found schedule"));
+
         InterviewReview review=new InterviewReview();
-        review.setReviewer(Utils.getUserFromContext());
+        review.setReviewer(Utils.getAccount());
         review.setRating(createReview.getRating());
         review.setComment(createReview.getComment());
-        review.setInterviewSlot(slot);
+        review.setInterviewSchedule(interviewSchedule);
         review.setJobId(createReview.getJobId());
 
         return interviewReviewRepository.save(review);
 
     }
 
-    public InterviewReview getReviewBySlotId(Long id) {
-        return interviewReviewRepository.findByInterviewSlotId(id);
 
-    }
 
     public Map<Integer, Integer> getRatingStatistics(Long jobId) {
         List<Object[]> results = interviewReviewRepository.getRatingStatisticsByJobId(jobId);
@@ -71,5 +74,10 @@ public class InterviewReviewService {
         Page<ReviewView> interviewReviewPage=interviewReviewRepository.findByJobId(jobId,pageable);
         return new PaginatedResponse<>(interviewReviewPage.getContent(),interviewReviewPage.getTotalPages(),page,interviewReviewPage.getTotalElements());
 
+    }
+
+    public InterviewReview getReviewByScheduleId(Long scheduleId) {
+        Account account=Utils.getAccount();
+        return interviewReviewRepository.findByInterviewScheduleIdAndReviewerId(scheduleId,account.getId());
     }
 }

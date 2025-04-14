@@ -1,30 +1,30 @@
 package com.example.jobs_top.controller;
 
 import com.example.jobs_top.dto.res.ApiResponse;
-import com.example.jobs_top.model.UserProfile;
-import com.example.jobs_top.service.InterviewReviewService;
-import com.example.jobs_top.service.JobService;
-import com.example.jobs_top.service.RecruiterProfileService;
-import com.example.jobs_top.service.UserProfileService;
+import com.example.jobs_top.service.*;
+import com.example.jobs_top.utils.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/public")
 public class PublicController {
-    private final RecruiterProfileService recruiterProfileService;
+    private final CompanyService companyService;
     private final JobService jobService;
-    private final UserProfileService userProfileService;
+    private final CandidateService candidateService;
     private final InterviewReviewService interviewReviewService;
+    private final ElasticService elasticService;
+    private final ApplicationService applicationService;
 
-    public PublicController(RecruiterProfileService recruiterProfileService, JobService jobService, UserProfileService userProfileService, InterviewReviewService interviewReviewService) {
-        this.recruiterProfileService = recruiterProfileService;
+    public PublicController(CompanyService companyService, JobService jobService, CandidateService candidateService, InterviewReviewService interviewReviewService, ElasticService elasticService, ApplicationService applicationService) {
+        this.companyService = companyService;
         this.jobService = jobService;
-        this.userProfileService = userProfileService;
-
+        this.candidateService = candidateService;
         this.interviewReviewService = interviewReviewService;
+        this.elasticService = elasticService;
+        this.applicationService = applicationService;
     }
     @GetMapping("/count-jobs-by-location")
     public ResponseEntity<?> getJobCountByLocation() {
@@ -33,12 +33,12 @@ public class PublicController {
         );
     }
 
-    @GetMapping("/getAllCompanies")
-    public ResponseEntity<?> getRecruiterProfiles() {
+    @GetMapping("/companies")
+    public ResponseEntity<?> getAllCompanies() {
         return ResponseEntity.ok().body(new ApiResponse<>(
                 200,
-                "Get user profile successfully",
-                recruiterProfileService.getAllRecruiterProfiles()
+                Constants.SUCCESS_MESSAGE,
+                companyService.getAllCompanies()
         ));
     }
 
@@ -46,8 +46,8 @@ public class PublicController {
     public ResponseEntity<?> getUserProfile(@PathVariable Long userId) {
         return ResponseEntity.ok().body(new ApiResponse<>(
                 200,
-                "Get user profile successfully",
-                userProfileService.getUserProfileByUserId(userId)
+                Constants.SUCCESS_MESSAGE,
+                candidateService.getUserProfileByUserId(userId)
         ));
     }
 
@@ -59,10 +59,10 @@ public class PublicController {
                                         @RequestParam(value = "exp",required = false) String exp,
                                         @RequestParam(value = "job_type",required = false) String jobType,
                                         @RequestParam(value = "companyId",required = false) Long companyId,
-                                        @RequestParam(value = "industryId",required = false) Long industryId,
                                         @RequestParam(value = "keyword",required = false) String keyword,
                                         @RequestParam(value = "city",required = false) String city,
-                                        @RequestParam(value = "sortBy",required = false) String sortBy
+                                        @RequestParam(value = "sortBy",required = false) String sortBy,
+                                        @RequestParam(value = "categoryIds",required = false) List<Long> categoryIds
                                         ) {
 
         System.out.println(page+" "+size);
@@ -71,14 +71,14 @@ public class PublicController {
         System.out.println(exp);
         System.out.println(jobType);
         System.out.println(companyId);
-        System.out.println(industryId);
         System.out.println(keyword);
         System.out.println(city);
 
         return ResponseEntity.ok().body(new ApiResponse<>(
                 200,
-                "Get user profile successfully",
-                jobService.getAllJobsView(page,size,datePosted,salaryRange,exp,jobType,companyId,industryId,keyword,city,sortBy)
+                Constants.SUCCESS_MESSAGE,
+                jobService.getAllJobsView(page,size,datePosted,
+                        salaryRange,exp,jobType,companyId,keyword,city,sortBy,categoryIds)
         ));
     }
     @GetMapping("/reviews")
@@ -86,9 +86,24 @@ public class PublicController {
                                           @RequestParam(value = "size",defaultValue = "5") int size,
                                           @RequestParam(value = "jobId") Long jobId) {
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"success",interviewReviewService.getAllReview(jobId,page,size))
+                new ApiResponse<>(200,
+                        Constants.SUCCESS_MESSAGE,
+                        interviewReviewService.getAllReview(jobId,page,size))
         );
     }
+
+    @GetMapping("/jobs/sematic-search")
+    public ResponseEntity<?> sematicSearch(@RequestParam(value = "key") String key) {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        elasticService.sematicSearchJobDocument(key)
+                )
+
+        );
+    }
+
 
     @GetMapping("/reviews/stats/{jobId}")
     public ResponseEntity<?> getRatingStatistics(@PathVariable Long jobId) {
@@ -98,29 +113,29 @@ public class PublicController {
 
     }
 
-    @GetMapping("/related-jobs/{id}")
-    public ResponseEntity<?> getRelatedJobs(@PathVariable Long id,
-                                            @RequestParam(value = "page",defaultValue = "1") int page,
-                                            @RequestParam(value = "size",defaultValue = "5") int size) {
-        return ResponseEntity.ok().body(new ApiResponse<>(
-                200,
-                "Get user profile successfully",
-                jobService.getRelatedJobs(id,page,size)
-        ));
-    }
 
-    @GetMapping("/jobs/{id}")
+
+    /*@GetMapping("/jobs/{id}")
     public ResponseEntity<?> getJob(@PathVariable Long id) {
         return ResponseEntity.ok().body(
                 new ApiResponse<>(200,"Success",jobService.getJobById(id))
         );
+    }*/
+
+    @GetMapping("/company/{id}")
+    public ResponseEntity<?> getCompanyById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(200,"Success", companyService.getCompanyById(id))
+        );
     }
 
-    @GetMapping("/recruiter-profile/{id}")
-    public ResponseEntity<?> getRecruiterProfile(@PathVariable Long id) {
-        return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"Success",recruiterProfileService.getRecruiterProfileById(id))
-        );
+    @GetMapping("/applications/status-stats")
+    public ResponseEntity<?> getStatusStats(@RequestParam("jobId") Long jobId) {
+        return ResponseEntity.ok().body(new ApiResponse<>(
+                200,
+                Constants.SUCCESS_MESSAGE,
+                applicationService.getApplicationStatistics(jobId)
+        ));
     }
 
     /*

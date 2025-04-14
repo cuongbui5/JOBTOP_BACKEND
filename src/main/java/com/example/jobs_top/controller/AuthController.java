@@ -20,33 +20,39 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Log in successfully",
-                authService.login(loginRequest)
-        ));
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        "success",
+                        authService.login(loginRequest)
+                )
+        );
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Register successfully",
-                authService.register(registerRequest)
-        ));
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        "success",
+                        authService.register(registerRequest)
+                )
+        );
     }
 
 
 
-    @GetMapping("/roles")
-    public ResponseEntity<?> getAllRoles() {
-        return ResponseEntity.ok(new ApiResponse<>(200,"All roles successfully",authService.getAllRoles()));
-    }
+
 
 
     @GetMapping("/oauth/login")
     public ResponseEntity<?> oauthLogin(@RequestParam("code") String code) {
-        return ResponseEntity.ok(new ApiResponse<>(200,"Success",authService.loginByOauth(code)));
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        "success",
+                        authService.loginByOauth(code))
+        );
     }
 
 

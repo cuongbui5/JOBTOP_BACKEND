@@ -1,16 +1,19 @@
 package com.example.jobs_top.service;
 
 import com.example.jobs_top.dto.req.CreateInterviewSchedule;
+import com.example.jobs_top.dto.res.PaginatedResponse;
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.model.Application;
 import com.example.jobs_top.model.InterviewSchedule;
-import com.example.jobs_top.model.InterviewSlot;
 import com.example.jobs_top.model.enums.ApplicationStatus;
-import com.example.jobs_top.model.enums.InterviewScheduleStatus;
-import com.example.jobs_top.model.enums.SlotStatus;
+import com.example.jobs_top.model.enums.InterviewStatus;
 import com.example.jobs_top.repository.ApplicationRepository;
 import com.example.jobs_top.repository.InterviewScheduleRepository;
-import com.example.jobs_top.repository.InterviewSlotRepository;
 import com.example.jobs_top.utils.Utils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,86 +24,52 @@ import java.util.List;
 public class InterviewScheduleService {
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final ApplicationRepository applicationRepository;
-    private final InterviewSlotRepository interviewSlotRepository;
-    private final RecruiterProfileService recruiterProfileService;
-    private final InterviewSlotRepository slotRepository;
 
-
-    public InterviewScheduleService(InterviewScheduleRepository interviewScheduleRepository, ApplicationRepository applicationRepository, InterviewSlotRepository interviewSlotRepository, RecruiterProfileService recruiterProfileService, InterviewSlotRepository slotRepository) {
+    public InterviewScheduleService(InterviewScheduleRepository interviewScheduleRepository, ApplicationRepository applicationRepository) {
         this.interviewScheduleRepository = interviewScheduleRepository;
         this.applicationRepository = applicationRepository;
-        this.interviewSlotRepository = interviewSlotRepository;
-        this.recruiterProfileService = recruiterProfileService;
-        this.slotRepository = slotRepository;
     }
 
-    public List<InterviewSchedule> findAllByApplicationId(Long applicationId) {
-        //return interviewScheduleRepository.findByApplicationId(applicationId);
-        return null;
-    }
 
     @Transactional
     public InterviewSchedule createInterviewSchedule(CreateInterviewSchedule createInterviewSchedule) {
-        List<Long> applicationIds = createInterviewSchedule.getApplicationIds();
-        if (applicationIds == null || applicationIds.isEmpty()) {
-            throw new IllegalArgumentException("Cuộc phỏng vấn phải có ít nhất một ứng viên tham gia.");
-        }
-
         InterviewSchedule interviewSchedule = new InterviewSchedule();
         interviewSchedule.setInterviewNote(createInterviewSchedule.getInterviewNote());
         interviewSchedule.setOfficeAddress(createInterviewSchedule.getOfficeAddress());
         interviewSchedule.setStartTime(createInterviewSchedule.getStartTime());
         interviewSchedule.setEndTime(createInterviewSchedule.getEndTime());
         interviewSchedule.setInterviewDate(createInterviewSchedule.getInterviewDate());
-        interviewSchedule.setStatus(InterviewScheduleStatus.SCHEDULED);
-        interviewSchedule.setCreatedBy(Utils.getUserFromContext().getId());
-
-        InterviewSchedule savedInterviewSchedule = interviewScheduleRepository.save(interviewSchedule);
-
-        List<Application> applications = applicationRepository.findAllByIdIn(applicationIds);
-
-        /*if (applications.size() != applicationIds.size()) {
-            throw new IllegalArgumentException("Một hoặc nhiều ID ứng viên không tồn tại trong hệ thống.");
-        }*/
-
-        List<InterviewSlot> interviewSlots = applications.stream().map(application -> {
-            application.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
-            InterviewSlot interviewSlot = new InterviewSlot();
-            interviewSlot.setApplication(application);
-            interviewSlot.setInterviewSchedule(savedInterviewSchedule);
-            return interviewSlot;
-        }).toList();
-
-
-        interviewSlotRepository.saveAll(interviewSlots);
-        applicationRepository.saveAll(applications);
-
-        return savedInterviewSchedule;
+        interviewSchedule.setStatus(InterviewStatus.SCHEDULED);
+        interviewSchedule.setCreatedBy(Utils.getAccount().getId());
+        return interviewScheduleRepository.save(interviewSchedule);
     }
 
     @Transactional
     public InterviewSchedule updateInterviewSchedule(Long id,CreateInterviewSchedule createInterviewSchedule) {
         InterviewSchedule interviewSchedule = interviewScheduleRepository.findById(id).orElseThrow(()->new RuntimeException("InterviewSchedule not found"));
+        if(interviewSchedule.getStatus() != InterviewStatus.SCHEDULED){
+            //chỉ được cập nhật khi đã lên lịch
+            throw new RuntimeException("Hành động không được chấp nhận");
+        }
         interviewSchedule.setInterviewNote(createInterviewSchedule.getInterviewNote());
         interviewSchedule.setOfficeAddress(createInterviewSchedule.getOfficeAddress());
         interviewSchedule.setStartTime(createInterviewSchedule.getStartTime());
         interviewSchedule.setEndTime(createInterviewSchedule.getEndTime());
         interviewSchedule.setInterviewDate(createInterviewSchedule.getInterviewDate());
-        if(interviewSchedule.getStatus() != InterviewScheduleStatus.SCHEDULED){
-            throw new RuntimeException("Hành động không được chấp nhận");
-        }
 
-        if(createInterviewSchedule.getStatus()==InterviewScheduleStatus.COMPLETED){
+        if(createInterviewSchedule.getStatus() == InterviewStatus.COMPLETED){
             LocalDateTime interviewDateTime = interviewSchedule.getInterviewDate()
                     .atTime(interviewSchedule.getEndTime());
             LocalDateTime currentDateTime = LocalDateTime.now();
             if (!currentDateTime.isAfter(interviewDateTime)) {
-                throw new RuntimeException("Chỉ có thể cập nhật hoàn thành sau khi phỏng vấn đã kết thúc ");
+                throw new RuntimeException("Phỏng vấn chưa kết thúc");
 
             }
-            List<InterviewSlot> slots=slotRepository.findByInterviewScheduleId(interviewSchedule.getId());
-            slotRepository.saveAll(slots.stream().peek(slot -> slot.setStatus(SlotStatus.COMPLETED)).toList());
-
+            List<Application> applications=applicationRepository.findByInterviewScheduleId(id);
+            applications.forEach(a->{
+                a.setStatus(ApplicationStatus.COMPLETED);
+            });
+            applicationRepository.saveAll(applications);
 
         }
 
@@ -108,17 +77,30 @@ public class InterviewScheduleService {
         return interviewScheduleRepository.save(interviewSchedule);
     }
 
-    public InterviewSchedule cancelInterviewSchedule(Long id) {
-        InterviewSchedule interviewSchedule = interviewScheduleRepository.findById(id).orElseThrow(()->new RuntimeException("InterviewSchedule not found"));
-        interviewSchedule.setStatus(InterviewScheduleStatus.CANCELED_BY_RECRUITER);
-        return interviewScheduleRepository.save(interviewSchedule);
-    }
+
+
+
+
+
 
     public List<InterviewSchedule> getAllInterviewSchedules() {
-        return interviewScheduleRepository.findByCreatedBy(Utils.getUserFromContext().getId());
+        return interviewScheduleRepository.findByCreatedBy(Utils.getAccount().getId());
     }
 
-    public InterviewSchedule getInterviewById(Long id) {
+    public InterviewSchedule findInterviewById(Long id) {
         return interviewScheduleRepository.findById(id).orElseThrow(()->new RuntimeException("InterviewSchedule not found"));
+    }
+
+    public PaginatedResponse<?> getAllInterviewSchedulesByAccount(int page,int size) {
+        Account account = Utils.getAccount();
+        Pageable pageable = PageRequest.of(page-1,size,Sort.by("createdAt").descending());
+        Page<InterviewSchedule> interviewSchedulePage = interviewScheduleRepository
+                .findInterviewSchedulesByAccountId(account.getId(), pageable);
+        return new PaginatedResponse<>(
+                interviewSchedulePage.getContent(),
+                interviewSchedulePage.getTotalPages(),
+                page,
+                interviewSchedulePage.getTotalElements()
+        );
     }
 }

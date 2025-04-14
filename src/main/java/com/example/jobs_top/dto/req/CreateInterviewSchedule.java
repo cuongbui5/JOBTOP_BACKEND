@@ -1,6 +1,6 @@
 package com.example.jobs_top.dto.req;
 
-import com.example.jobs_top.model.enums.InterviewScheduleStatus;
+import com.example.jobs_top.model.enums.InterviewStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
@@ -13,17 +13,16 @@ public class CreateInterviewSchedule {
     private LocalTime startTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime endTime;
-    private InterviewScheduleStatus status;
+    private InterviewStatus status;
 
     private String interviewNote;
     private String officeAddress;
-    private List<Long> applicationIds;
 
-    public InterviewScheduleStatus getStatus() {
+    public InterviewStatus getStatus() {
         return status;
     }
 
-    public void setStatus(InterviewScheduleStatus status) {
+    public void setStatus(InterviewStatus status) {
         this.status = status;
     }
 
@@ -49,14 +48,6 @@ public class CreateInterviewSchedule {
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
-    }
-
-    public List<Long> getApplicationIds() {
-        return applicationIds;
-    }
-
-    public void setApplicationIds(List<Long> applicationIds) {
-        this.applicationIds = applicationIds;
     }
 
     public String getInterviewNote() {

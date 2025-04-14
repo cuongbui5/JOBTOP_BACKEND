@@ -1,9 +1,9 @@
 package com.example.jobs_top.dto.req;
 
-import jakarta.persistence.Lob;
+
 
 public class CreateReview {
-    private Long slotId;
+    private Long interviewScheduleId;
     private int rating;
     private String comment;
     private Long jobId;
@@ -16,12 +16,12 @@ public class CreateReview {
         this.jobId = jobId;
     }
 
-    public Long getSlotId() {
-        return slotId;
+    public Long getInterviewScheduleId() {
+        return interviewScheduleId;
     }
 
-    public void setSlotId(Long slotId) {
-        this.slotId = slotId;
+    public void setInterviewScheduleId(Long interviewScheduleId) {
+        this.interviewScheduleId = interviewScheduleId;
     }
 
     public int getRating() {
