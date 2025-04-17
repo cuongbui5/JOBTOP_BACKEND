@@ -71,32 +71,30 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
 
 
-    @Query("SELECT j.id AS id,j.title AS title, j.requirements AS requirements, j.salaryMin AS salaryMin, j.status AS status, " +
+    @Query("SELECT j.id AS id, j.title AS title, j.requirements AS requirements, j.salaryMin AS salaryMin, j.status AS status, " +
             "j.salaryMax AS salaryMax, r.name AS companyName, j.city AS city, j.jobType AS jobType, " +
             "j.experienceLevel AS experienceLevel, j.views AS views " +
             "FROM Job j " +
-            "JOIN j.company r "+
-            "JOIN r.category c "+
+            "JOIN j.company r " +
+            "JOIN r.category c " +
             "WHERE j.status = 'APPROVED' AND j.applicationDeadline > CURRENT_DATE AND " +
             "(:categoryIds IS NULL OR c.id IN :categoryIds) AND " +
-            "(:updatedAfter IS NULL OR j.updatedAt >= :updatedAfter) AND " +
             "(:salaryMin IS NULL OR :salaryMax IS NULL OR (j.salaryMin >= :salaryMin AND j.salaryMin <= :salaryMax)) AND " +
-            "(:exp IS NULL OR j.experienceLevel = :exp) AND " +
-            "(:jobType IS NULL OR j.jobType = :jobType) AND " +
-            "(:companyId IS NULL OR r.id = :companyId) AND " +
+            "(:exps IS NULL OR j.experienceLevel IN :exps) AND " +
+            "(:jobTypes IS NULL OR j.jobType IN :jobTypes) AND " +
+            "(:companyIds IS NULL OR r.id IN :companyIds) AND " +
             "(:keyword IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "(:city IS NULL OR j.city = :city)"
+            "(:cities IS NULL OR j.city IN :cities)"
     )
     Page<JobCardView> findAllWithFilters(
-            @Param("updatedAfter") ZonedDateTime updatedAfter,
+            @Param("categoryIds") List<Long> categoryIds,
             @Param("salaryMin") Integer salaryMin,
             @Param("salaryMax") Integer salaryMax,
-            @Param("exp") ExperienceLevel exp,
-            @Param("jobType") JobType jobType,
-            @Param("companyId") Long companyId,
+            @Param("exps") List<ExperienceLevel> exps,
+            @Param("jobTypes") List<JobType> jobTypes,
+            @Param("companyIds") List<Long> companyIds,
             @Param("keyword") String keyword,
-            @Param("city") String city,
-            @Param("categoryIds") List<Long> categoryIds,
+            @Param("cities") List<String> cities,
             Pageable pageable
     );
 

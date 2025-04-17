@@ -27,13 +27,11 @@ import java.util.stream.Collectors;
 @Service
 public class MessageService {
     private final ConversationRepository conversationRepository;
-
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     public MessageService(ConversationRepository conversationRepository, MessageRepository messageRepository, SimpMessagingTemplate messagingTemplate) {
         this.conversationRepository = conversationRepository;
-
         this.messageRepository = messageRepository;
         this.messagingTemplate = messagingTemplate;
     }

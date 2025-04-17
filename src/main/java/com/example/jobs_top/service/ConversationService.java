@@ -50,20 +50,21 @@ public class ConversationService {
 
 
     @Transactional
-    public Conversation create(CreateConversation createConversation) {
+    public ConversationView create(CreateConversation createConversation) {
         Account account = Utils.getAccount();
 
         Company company = companyRepository
                 .findByName(createConversation.getCompanyName())
                 .orElseThrow(() -> new IllegalArgumentException("Company not found"));
 
-        return conversationRepository
+        return conversationViewRepository
                 .findByAccountIdAndCompanyId(account.getId(), company.getId())
                 .orElseGet(() -> {
                     Conversation conversation = new Conversation();
                     conversation.setCompany(company);
                     conversation.setAccount(account);
-                    return conversationRepository.save(conversation);
+                    Conversation savedConversation= conversationRepository.save(conversation);
+                    return new ConversationView(savedConversation) ;
                 });
     }
 

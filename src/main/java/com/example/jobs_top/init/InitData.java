@@ -326,7 +326,7 @@ public class InitData implements CommandLineRunner {
 
             // Tạo Document từ embedding và metadata
             Document document = new Document(content, metadata);
-            document.setEmbedding(embedding);
+            //document.setEmbedding(embedding);
             documents.add(document);
 
 

@@ -23,6 +23,15 @@ public class Account extends BaseEntity {
     private AccountStatus status;
     @Enumerated(EnumType.STRING)
     private RoleType role;
+    private Long resumeDefault;
+
+    public Long getResumeDefault() {
+        return resumeDefault;
+    }
+
+    public void setResumeDefault(Long resumeDefault) {
+        this.resumeDefault = resumeDefault;
+    }
 
     public RoleType getRole() {
         return role;

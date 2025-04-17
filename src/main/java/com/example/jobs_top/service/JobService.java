@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JobService {
@@ -107,20 +108,20 @@ public class JobService {
 
     public PaginatedResponse<?> getAllJobsView(int page,
                                                int size,
-                                               Integer datePosted,
+                                               List<Long> categoryIds,
                                                String salaryRange,
-                                               String exp,
-                                               String jobType,
-                                               Long companyId,
+                                               List<ExperienceLevel> exps,
+                                               List<JobType> jobTypes,
+                                               List<Long> companyIds,
                                                String keyword,
-                                               String city,
-                                               String sortBy,
-                                               List<Long> categoryIds) {
+                                               List<String> cities,
+                                               String sortBy) {
 
+        Integer salaryMin = null;
+        Integer salaryMax = null;
+        System.out.println(jobTypes);
 
-        Integer salaryMin;
-        Integer salaryMax;
-        if(salaryRange!=null){
+        if (salaryRange != null) {
             switch (salaryRange) {
                 case "below_10m":
                     salaryMin = 0;
@@ -140,48 +141,28 @@ public class JobService {
                     break;
                 case "above_50m":
                     salaryMin = 50_000_000;
-                    salaryMax = 50_000_000;
-                    break;
-                default:
-                    salaryMin = null;
-                    salaryMax = null;
+                    salaryMax = 100_000_000; // giới hạn max lớn hơn
                     break;
             }
-        }else {
-            salaryMin = null;
-            salaryMax = null;
-        }
-
-
-        ZonedDateTime updatedAfter = (datePosted != null)
-                ? ZonedDateTime.now(ZoneId.systemDefault()).minusDays(datePosted)
-                : null;
-
-        JobType jobTypeEnum = (jobType != null) ? JobType.valueOf(jobType) : null;
-        ExperienceLevel expEnum = (exp != null) ? ExperienceLevel.valueOf(exp) : null;
-        Pageable pageable;
-        if ("date_asc".equals(sortBy)) {
-            pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
-        } else {
-            pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         }
 
 
 
+        Pageable pageable = "date_asc".equals(sortBy)
+                ? PageRequest.of(page - 1, size, Sort.by("createdAt").ascending())
+                : PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
 
-
-
-        Page<JobCardView> jobPage = jobRepository.findAllWithFilters(updatedAfter,
+        Page<JobCardView> jobPage = jobRepository.findAllWithFilters(
+                categoryIds,
                 salaryMin,
                 salaryMax,
-                expEnum,
-                jobTypeEnum,
-                companyId,
+                exps,
+                jobTypes,
+                companyIds,
                 keyword,
-                city,
-                categoryIds,
-                pageable);
-
+                cities,
+                pageable
+        );
 
         return new PaginatedResponse<>(
                 jobPage.getContent(),

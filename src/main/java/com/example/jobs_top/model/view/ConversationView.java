@@ -1,5 +1,6 @@
 package com.example.jobs_top.model.view;
 
+import com.example.jobs_top.model.Conversation;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -17,6 +18,20 @@ public class ConversationView {
     private String content;
     private Boolean isRead;
     private Long senderId;
+
+    public ConversationView() {
+    }
+
+    public ConversationView(Conversation conversation) {
+        this.conversationId = conversation.getId();
+        this.accountId = conversation.getAccount().getId();
+        this.companyId = conversation.getCompany().getId();
+        this.avatar=conversation.getAccount().getAvatar();
+        this.email=conversation.getAccount().getEmail();
+        this.companyName=conversation.getCompany().getName();
+        this.logo=conversation.getCompany().getLogo();
+
+    }
 
     public Long getSenderId() {
         return senderId;

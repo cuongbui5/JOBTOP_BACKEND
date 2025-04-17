@@ -1,6 +1,8 @@
 package com.example.jobs_top.controller;
 
 import com.example.jobs_top.dto.res.ApiResponse;
+import com.example.jobs_top.model.enums.ExperienceLevel;
+import com.example.jobs_top.model.enums.JobType;
 import com.example.jobs_top.service.*;
 import com.example.jobs_top.utils.Constants;
 import org.springframework.http.ResponseEntity;
@@ -52,35 +54,36 @@ public class PublicController {
     }
 
     @GetMapping("/getAllJobs")
-    public ResponseEntity<?> getAllJobs(@RequestParam(value = "page",defaultValue = "1") int page,
-                                        @RequestParam(value = "size",defaultValue = "5") int size,
-                                        @RequestParam(value = "date_posted",required = false) Integer datePosted,
-                                        @RequestParam(value = "salary_range",required = false) String salaryRange,
-                                        @RequestParam(value = "exp",required = false) String exp,
-                                        @RequestParam(value = "job_type",required = false) String jobType,
-                                        @RequestParam(value = "companyId",required = false) Long companyId,
-                                        @RequestParam(value = "keyword",required = false) String keyword,
-                                        @RequestParam(value = "city",required = false) String city,
-                                        @RequestParam(value = "sortBy",required = false) String sortBy,
-                                        @RequestParam(value = "categoryIds",required = false) List<Long> categoryIds
-                                        ) {
-
-        System.out.println(page+" "+size);
-        System.out.println(datePosted);
-        System.out.println(salaryRange);
-        System.out.println(exp);
-        System.out.println(jobType);
-        System.out.println(companyId);
-        System.out.println(keyword);
-        System.out.println(city);
-
+    public ResponseEntity<?> getAllJobs(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
+            @RequestParam(value = "salaryRange", required = false) String salaryRange,
+            @RequestParam(value = "exps", required = false) List<ExperienceLevel> exps,
+            @RequestParam(value = "jobTypes", required = false) List<JobType> jobTypes,
+            @RequestParam(value = "companyIds", required = false) List<Long> companyIds,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "cities", required = false) List<String> cities,
+            @RequestParam(value = "sortBy", required = false) String sortBy
+    ) {
         return ResponseEntity.ok().body(new ApiResponse<>(
                 200,
                 Constants.SUCCESS_MESSAGE,
-                jobService.getAllJobsView(page,size,datePosted,
-                        salaryRange,exp,jobType,companyId,keyword,city,sortBy,categoryIds)
+                jobService.getAllJobsView(
+                        page,
+                        size,
+                        categoryIds,
+                        salaryRange,
+                        exps,
+                        jobTypes,
+                        companyIds,
+                        keyword,
+                        cities,
+                        sortBy
+                )
         ));
     }
+
     @GetMapping("/reviews")
     public ResponseEntity<?> getAllReview(@RequestParam(value = "page",defaultValue = "1") int page,
                                           @RequestParam(value = "size",defaultValue = "5") int size,

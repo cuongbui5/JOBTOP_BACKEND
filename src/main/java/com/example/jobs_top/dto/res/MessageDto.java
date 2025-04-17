@@ -1,6 +1,7 @@
 package com.example.jobs_top.dto.res;
 
 import com.example.jobs_top.model.Message;
+import com.example.jobs_top.model.enums.RoleType;
 
 import java.time.ZonedDateTime;
 
@@ -8,6 +9,7 @@ public class MessageDto {
     private Long id;
     private Long conversationId;
     private Long senderId;
+    private String senderName;
     private String content;
     private boolean isRead ;
     private ZonedDateTime createdAt;
@@ -19,8 +21,22 @@ public class MessageDto {
         this.createdAt = message.getCreatedAt();
         this.senderId=message.getSender().getId();
         this.isRead = message.isRead();
+        if(message.getSender().getRole()== RoleType.EMPLOYER){
+            this.senderName=message.getConversation().getCompany().getName();
+        }else {
+            this.senderName=message.getSender().getEmail();
+        }
 
 
+
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
     }
 
     public Long getSenderId() {

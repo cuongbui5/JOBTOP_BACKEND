@@ -56,7 +56,7 @@ public class ElasticService {
         List<Document> results= vectorStore
                 .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
                 .withTopK(20).withSimilarityThreshold(0.8));
-        System.out.println(results.size());
+
 
         if (results.isEmpty()) {
             return List.of();

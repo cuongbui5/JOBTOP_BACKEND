@@ -33,11 +33,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
-import org.springframework.web.client.RestTemplate;
-
-import static org.springframework.ai.autoconfigure.vectorstore.milvus.MilvusVectorStoreProperties.MilvusMetricType.COSINE;
 
 
 @SpringBootApplication
@@ -50,10 +46,16 @@ public class JobsTopApplication {
 
     }
 
+
     /*@Bean
     public RestClient.Builder builder() {
         return RestClient.builder().requestFactory(new SimpleClientHttpRequestFactory());
     }
+     @Bean
+    public VectorStore vectorStore(EmbeddingModel embeddingModel){
+        return SimpleVectorStore.builder(embeddingModel).build();
+    }
+
 
 
     @Bean
@@ -75,10 +77,7 @@ public class JobsTopApplication {
         return new AnthropicChatModel(new AnthropicApi("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"));
     }
 
-    @Bean
-    public VectorStore vectorStore(EmbeddingModel embeddingModel){
-        return new SimpleVectorStore(embeddingModel);
-    }*/
+   */
 
     // This can be any EmbeddingModel implementation
 

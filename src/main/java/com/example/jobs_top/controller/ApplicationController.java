@@ -17,14 +17,14 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    @PostMapping("/apply")
-    public ResponseEntity<?> applyJob(@RequestBody ApplyRequest applyRequest) {
+    @PostMapping("/apply-job/{jobId}")
+    public ResponseEntity<?> applyJob(@PathVariable Long jobId) {
 
         return ResponseEntity.ok().body(
                 new ApiResponse<>(
                         201,
                         Constants.SUCCESS_MESSAGE,
-                        applicationService.applyJob(applyRequest)
+                        applicationService.applyJob(jobId)
                 ));
     }
     @PostMapping("/view/{id}")

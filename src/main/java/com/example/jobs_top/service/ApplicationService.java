@@ -2,6 +2,7 @@ package com.example.jobs_top.service;
 
 import com.example.jobs_top.dto.req.AddToInterviewRequest;
 import com.example.jobs_top.dto.req.ApplyRequest;
+import com.example.jobs_top.dto.req.CreateNotification;
 import com.example.jobs_top.dto.res.ApplicationStatisticsDTO;
 import com.example.jobs_top.dto.res.ApplicationStatusStatsDTO;
 import com.example.jobs_top.dto.res.PaginatedResponse;
@@ -32,21 +33,29 @@ public class ApplicationService {
     private final JobRepository jobRepository;
     private final CompanyService companyService;
     private final InterviewScheduleRepository interviewScheduleRepository;
+    private final NotificationService notificationService;
 
-    public ApplicationService(ApplicationRepository applicationRepository, ResumeRepository resumeRepository, JobRepository jobRepository, CompanyService companyService, InterviewScheduleRepository interviewScheduleRepository) {
+    public ApplicationService(ApplicationRepository applicationRepository, ResumeRepository resumeRepository, JobRepository jobRepository, CompanyService companyService, InterviewScheduleRepository interviewScheduleRepository, NotificationService notificationService) {
         this.applicationRepository = applicationRepository;
         this.resumeRepository = resumeRepository;
         this.jobRepository = jobRepository;
         this.companyService = companyService;
         this.interviewScheduleRepository = interviewScheduleRepository;
+        this.notificationService = notificationService;
     }
 
 
+
+
     @Transactional
-    public Application applyJob(ApplyRequest applyRequest) {
+    public Application applyJob(Long jobId) {
         Account account=Utils.getAccount();
+        if(account.getResumeDefault()==null){
+            throw new IllegalArgumentException("Chưa cập nhật thông tin CV");
+        }
+
         Optional<Application> applicationOptional=applicationRepository
-                .findByJobIdAndAccountIdOrderByCreatedAtDesc(applyRequest.getJobId(), account.getId());
+                .findByJobIdAndAccountIdOrderByCreatedAtDesc(jobId, account.getId());
 
         if(applicationOptional.isPresent()){
             Application application=applicationOptional.get();
@@ -56,16 +65,23 @@ public class ApplicationService {
                 throw new IllegalArgumentException("Bạn cần đợi thêm " + remainingDays + " ngày trước khi có thể ứng tuyển lại. Cảm ơn bạn đã quan tâm!");
             }
         }
-        Job job=jobRepository.findById(applyRequest.getJobId()).orElseThrow(()->new RuntimeException("Not found job"));
-        Resume resume=resumeRepository.findById(applyRequest.getResumeId()).orElseThrow(()->new RuntimeException("Not found CV"));
+        Job job=jobRepository.findById(jobId).orElseThrow(()->new RuntimeException("Not found job"));
+        Resume resume=resumeRepository.findById(account.getResumeDefault()).orElseThrow(()->new RuntimeException("Not found CV"));
         Application application=new Application();
         application.setJob(job);
         application.setResume(resume);
         application.setStatus(ApplicationStatus.PENDING);
         application.setAccount(account);
+        String content = String.format("Bạn đã ứng tuyển vào vị trí %s", job.getTitle());
+        notificationService.createNotification(
+                new CreateNotification(account.getId(),
+                content,
+                "Hệ thống"));
         return applicationRepository.save(application);
 
     }
+
+
 
     public PaginatedResponse<ApplicationUserView> getAppliedJobs(int page,int size, ApplicationStatus status) {
         Account account=Utils.getAccount();
@@ -85,35 +101,67 @@ public class ApplicationService {
         return applicationRepository.findById(applicationId).orElseThrow(()->new RuntimeException("Application not found"));
     }
 
+    @Transactional
     public Application viewApplication(Long id) {
         Application application=getApplication(id);
+        ApplicationStatus currentStatus=application.getStatus();
+        ApplicationStatus newStatus=ApplicationStatus.VIEWED;
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
+        }
         application.setStatus(ApplicationStatus.VIEWED);
+        Account account=application.getAccount();
+        String content = String
+                .format("Nhà tuyển dụng %s vừa xem hồ sơ ứng tuyển của bạn",
+                        application.getJob().getCompany().getName());
+        notificationService.createNotification(
+                new CreateNotification(account.getId(),
+                        content,
+                        "Hệ thống"));
         return applicationRepository.save(application);
+
+
     }
 
 
-
+    @Transactional
     public Application rejectApplication(Long id) {
         Application application=getApplication(id);
-        ApplicationStatus status=application.getStatus();
-        if(status!=ApplicationStatus.ADDED_TO_INTERVIEW&&status!=ApplicationStatus.COMPLETED){
-            application.setStatus(ApplicationStatus.REJECTED);
-            return applicationRepository.save(application);
-
+        ApplicationStatus currentStatus=application.getStatus();
+        ApplicationStatus newStatus=ApplicationStatus.REJECTED;
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
         }
-        throw new IllegalArgumentException("Hành động không hợp lệ");
+        application.setStatus(ApplicationStatus.REJECTED);
+        Account account=application.getAccount();
+        String content = String
+                .format("Nhà tuyển dụng %s đã từ chối hồ sơ ứng tuyển của bạn",
+                        application.getJob().getCompany().getName());
+        notificationService.createNotification(
+                new CreateNotification(account.getId(),
+                        content,
+                        "Hệ thống"));
+        return applicationRepository.save(application);
 
     }
-
+    @Transactional
     public Application approveApplication(Long id) {
         Application application=applicationRepository.findById(id).orElseThrow(()->new RuntimeException("Application not found"));
-        ApplicationStatus status=application.getStatus();
-        if(status!=ApplicationStatus.COMPLETED){
-            application.setStatus(ApplicationStatus.APPROVED);
-            return applicationRepository.save(application);
-
+        ApplicationStatus currentStatus=application.getStatus();
+        ApplicationStatus newStatus=ApplicationStatus.APPROVED;
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
         }
-        throw new IllegalArgumentException("Hành động không hợp lệ");
+        application.setStatus(ApplicationStatus.APPROVED);
+        Account account=application.getAccount();
+        String content = String
+                .format("Nhà tuyển dụng %s đã chấp nhận hồ sơ ứng tuyển của bạn",
+                        application.getJob().getCompany().getName());
+        notificationService.createNotification(
+                new CreateNotification(account.getId(),
+                        content,
+                        "Hệ thống"));
+        return applicationRepository.save(application);
 
     }
 
@@ -143,14 +191,32 @@ public class ApplicationService {
 
     }
 
+    @Transactional
     public void addToInterview(Long interviewId, AddToInterviewRequest addToInterviewRequest) {
         InterviewSchedule interviewSchedule=interviewScheduleRepository.findById(interviewId)
                 .orElseThrow(()->new NotFoundException("Not found interview schedule"));
         List<Application> applications= getApplicationsInIds(addToInterviewRequest);
 
         applications.forEach(a->{
+            if (a.getInterviewSchedule() != null) {
+                throw new IllegalArgumentException("Ứng viên đã được gán vào lịch phỏng vấn.");
+
+            }
+            ApplicationStatus currentStatus=a.getStatus();
+            ApplicationStatus newStatus=ApplicationStatus.ADDED_TO_INTERVIEW;
+            if (!currentStatus.canTransitionTo(newStatus)) {
+                throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
+            }
             a.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
             a.setInterviewSchedule(interviewSchedule);
+            Account account=a.getAccount();
+            String content = String
+                    .format("Nhà tuyển dụng %s đã tạo lịch phỏng vấn cho bạn",
+                            a.getJob().getCompany().getName());
+            notificationService.createNotification(
+                    new CreateNotification(account.getId(),
+                            content,
+                            "Hệ thống"));
         });
 
         applicationRepository.saveAll(applications);
@@ -160,12 +226,25 @@ public class ApplicationService {
 
 
 
-
+    @Transactional
     public void removeFromInterview(AddToInterviewRequest removeRequest) {
         List<Application> applications= getApplicationsInIds(removeRequest);
-        applications.forEach(app -> {
-            app.setInterviewSchedule(null);
-            app.setStatus(ApplicationStatus.REJECTED);
+        applications.forEach(a -> {
+            a.setInterviewSchedule(null);
+            ApplicationStatus currentStatus=a.getStatus();
+            ApplicationStatus newStatus=ApplicationStatus.REJECTED;
+            if (!currentStatus.canTransitionTo(newStatus)) {
+                throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
+            }
+            a.setStatus(ApplicationStatus.REJECTED);
+            Account account=a.getAccount();
+            String content = String
+                    .format("Nhà tuyển dụng %s đã xóa bạn khỏi cuộc phỏng vấn",
+                            a.getJob().getCompany().getName());
+            notificationService.createNotification(
+                    new CreateNotification(account.getId(),
+                            content,
+                            "Hệ thống"));
         });
 
         applicationRepository.saveAll(applications);
@@ -188,8 +267,14 @@ public class ApplicationService {
 
     public void markNoShowApplicants(AddToInterviewRequest addToInterviewRequest) {
         List<Application> applications= getApplicationsInIds(addToInterviewRequest);
-        applications.forEach(app -> {
-            app.setStatus(ApplicationStatus.NO_SHOW);
+        applications.forEach(a -> {
+            ApplicationStatus currentStatus=a.getStatus();
+            ApplicationStatus newStatus=ApplicationStatus.NO_SHOW;
+            if (!currentStatus.canTransitionTo(newStatus)) {
+                throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
+            }
+
+            a.setStatus(ApplicationStatus.NO_SHOW);
         });
 
         applicationRepository.saveAll(applications);

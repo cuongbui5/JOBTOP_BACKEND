@@ -19,4 +19,13 @@ public enum ApplicationStatus {
     public String getLabel() {
         return label;
     }
+    public boolean canTransitionTo(ApplicationStatus newStatus) {
+        return switch (this) {
+            case PENDING -> newStatus == VIEWED || newStatus == REJECTED;
+            case VIEWED -> newStatus == APPROVED || newStatus == REJECTED;
+            case APPROVED -> newStatus == ADDED_TO_INTERVIEW || newStatus == REJECTED;
+            case ADDED_TO_INTERVIEW -> newStatus == COMPLETED || newStatus == NO_SHOW || newStatus == REJECTED;
+            case NO_SHOW, COMPLETED, REJECTED -> false;
+        };
+    }
 }
