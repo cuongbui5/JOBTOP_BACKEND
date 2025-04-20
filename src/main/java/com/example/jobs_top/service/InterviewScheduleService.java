@@ -62,13 +62,11 @@ public class InterviewScheduleService {
                     .atTime(interviewSchedule.getEndTime());
             LocalDateTime currentDateTime = LocalDateTime.now();
             if (!currentDateTime.isAfter(interviewDateTime)) {
-                throw new RuntimeException("Phỏng vấn chưa kết thúc");
+                throw new IllegalArgumentException("Phỏng vấn chưa kết thúc");
 
             }
             List<Application> applications=applicationRepository.findByInterviewScheduleId(id);
-            applications.forEach(a->{
-                a.setStatus(ApplicationStatus.COMPLETED);
-            });
+            applications.forEach(a-> a.setStatus(ApplicationStatus.COMPLETED));
             applicationRepository.saveAll(applications);
 
         }

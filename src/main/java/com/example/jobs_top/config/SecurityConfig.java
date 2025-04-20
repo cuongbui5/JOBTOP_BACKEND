@@ -64,7 +64,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        String[] apiPublic={"/categories","/auth/**","/public/**","/ws/**"};
+        String[] apiPublic={"/categories","/auth/**","/public/**","/ws/**","/payments/**"};
 
 
 
@@ -76,6 +76,7 @@ public class SecurityConfig {
                             //a.requestMatchers("/admin/**").hasAuthority("ADMIN");
                             //a.requestMatchers("/api/auth/**","/api/forgotPassword/**").permitAll();
                             request.requestMatchers(HttpMethod.GET,"/jobs/*").permitAll();
+                            request.requestMatchers(HttpMethod.GET,"/plans").permitAll();
                             request.requestMatchers(apiPublic).permitAll();
                             request.anyRequest().authenticated();
                         }

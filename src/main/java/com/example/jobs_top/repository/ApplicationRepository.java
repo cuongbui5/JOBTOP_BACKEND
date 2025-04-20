@@ -5,6 +5,7 @@ import com.example.jobs_top.dto.view.ApplicationRecruiterView;
 import com.example.jobs_top.dto.view.ApplicationUserView;
 import com.example.jobs_top.model.Application;
 import com.example.jobs_top.model.enums.ApplicationStatus;
+import com.example.jobs_top.model.enums.InterviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,12 @@ import java.util.Optional;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findAllByIdIn(List<Long> ids);
     List<Application> findByInterviewScheduleId(Long interviewScheduleId);
+    @Query("SELECT a FROM Application a " +
+            "WHERE a.account.id = :accountId AND a.interviewSchedule.status = :status")
+    List<Application> findInterviewSchedulesByAccountIdAndStatus(
+            @Param("accountId") Long accountId,
+            @Param("status") InterviewStatus status
+    );
 
 
     @Query("""

@@ -1,25 +1,44 @@
 package com.example.jobs_top.service;
 
-import com.example.jobs_top.dto.req.ApplicationDetailsRequest;
-import com.example.jobs_top.dto.req.ApplyJobRequest;
-import com.example.jobs_top.model.Application;
-import com.example.jobs_top.model.enums.ApplicationStatus;
+
+import com.example.jobs_top.dto.res.InterviewScheduleDto;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
-import org.springframework.core.NestedExceptionUtils;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.function.Supplier;
 
-@Configuration
-public class Tools {
+
+@Configuration(proxyBeanMethods = false)
+public class CandidateTools {
     private final ApplicationService applicationService;
 
-    public Tools(ApplicationService applicationService) {
+    public CandidateTools(ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 
-    /*@Bean
+    @Bean
+    @Description("Tra cứu lịch phỏng vấn")
+    Supplier<List<InterviewScheduleDto>> getInterviewSchedules() {
+        return () -> {
+            try {
+                return applicationService.getInterviewScheduleByAccount();
+            }
+            catch (Exception e) {
+
+                return List.of();
+            }
+        };
+    }
+
+
+
+
+
+}
+
+ /*@Bean
     @Description("Get application details")
     public Function<ApplicationDetailsRequest, Application> getApplicationDetails() {
         return request -> {
@@ -61,4 +80,3 @@ public class Tools {
             }
         };
     }*/
-}

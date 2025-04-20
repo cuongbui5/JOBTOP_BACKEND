@@ -5,12 +5,14 @@ import com.example.jobs_top.dto.req.ApplyRequest;
 import com.example.jobs_top.dto.req.CreateNotification;
 import com.example.jobs_top.dto.res.ApplicationStatisticsDTO;
 import com.example.jobs_top.dto.res.ApplicationStatusStatsDTO;
+import com.example.jobs_top.dto.res.InterviewScheduleDto;
 import com.example.jobs_top.dto.res.PaginatedResponse;
 import com.example.jobs_top.dto.view.ApplicationRecruiterView;
 import com.example.jobs_top.dto.view.ApplicationUserView;
 import com.example.jobs_top.exception.NotFoundException;
 import com.example.jobs_top.model.*;
 import com.example.jobs_top.model.enums.ApplicationStatus;
+import com.example.jobs_top.model.enums.InterviewStatus;
 import com.example.jobs_top.repository.ApplicationRepository;
 import com.example.jobs_top.repository.InterviewScheduleRepository;
 import com.example.jobs_top.repository.JobRepository;
@@ -307,6 +309,18 @@ public class ApplicationService {
         }
 
         return new ApplicationStatisticsDTO(jobId, total, stats);
+    }
+    @Transactional
+    public List<InterviewScheduleDto> getInterviewScheduleByAccount() {
+        Account account=Utils.getAccount();
+
+        List<InterviewScheduleDto> interviewScheduleDtos= applicationRepository
+                .findInterviewSchedulesByAccountIdAndStatus(account.getId(), InterviewStatus.SCHEDULED)
+                .stream()
+                .map(InterviewScheduleDto::new).toList();
+
+        System.out.println(interviewScheduleDtos.size());
+        return interviewScheduleDtos;
     }
 
 

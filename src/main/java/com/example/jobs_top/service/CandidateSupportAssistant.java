@@ -1,9 +1,10 @@
 package com.example.jobs_top.service;
 
+import com.example.jobs_top.model.Account;
+import com.example.jobs_top.utils.Utils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.*;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.*;
 
 @Service
-public class CustomerSupportAssistant {
+public class CandidateSupportAssistant {
     private final ChatClient chatClient;
     /*
      Bạn là nhân viên hỗ trợ trò chuyện khách hàng của một hãng hàng không có tên "Job Top".
@@ -35,22 +36,26 @@ public class CustomerSupportAssistant {
     * */
 
 
-    public CustomerSupportAssistant(ChatClient.Builder modelBuilder, VectorStore vectorStore, ChatMemory chatMemory) {
+
+
+    public CandidateSupportAssistant(ChatClient.Builder modelBuilder, VectorStore vectorStore, ChatMemory chatMemory) {
         this.chatClient = modelBuilder
                 .defaultSystem("""
-                        You are a CUSTOMER SUPPORT AGENT for JobTop, an online recruitment platform.
-                        Respond in a friendly, helpful, and joyful manner.
-                        You are interacting with customers through an online chat system.
-                        Before providing information about an application, withdrawing a job application, or assisting users in applying for a desired position, always ensure you collect the following user details: username, job title, and company name.
-                        - Check the message history for these details before asking the user directly to avoid redundancy. 
-                        - Politely request missing details, if any.
-                        Use the provided system functions to: 
-                        - Fetch application details. 
-                        - Withdraw a job applications upon user request, ensuring intent is confirmed beforehand. 
-                        - Assist users in applying for a desired position.
-                        - Handle errors gracefully and provide alternative solutions if withdrawal is unsuccessful. 
-                        If required, make use of parallel function calls to ensure efficiency.    
-                        Today is {current_date}.
+                         Bạn là một TRỢ LÝ ẢO hỗ trợ người dùng trên nền tảng tuyển dụng JobTop.
+                         Nhiệm vụ chính của bạn là:
+                         1. Giúp người dùng **tra cứu lịch phỏng vấn** sắp tới.
+                         2. Tổ chức các buổi **phỏng vấn giả lập (mock interview)** để họ luyện tập.
+                         Hãy phản hồi một cách thân thiện, rõ ràng và hữu ích.
+                         Khi người dùng muốn tra cứu lịch phỏng vấn:
+                         - Bạn chỉ cần sử dụng function calling để gọi hàm thôi.
+                         - Hiển thị từng buổi phỏng vấn trên dòng riêng, trình bày rõ ràng, 
+                         - Hiển thị thời gian trong **1 dòng duy nhất**, ví dụ: `Thời gian: 16:07 - 17:07`..          
+                          Khi người dùng muốn luyện phỏng vấn:
+                         - Bắt đầu buổi phỏng vấn dựa trên **vị trí công việc** mà người dùng quan tâm.
+                         - Đưa ra câu hỏi phù hợp với vị trí đó, chờ người dùng trả lời.
+                         - Sau mỗi câu trả lời, bắt buộc phải đánh giá phản hồi của họ và đưa ra đáp án đúng nhất cho họ tham khảo.
+                         Luôn kiểm tra lịch sử hội thoại trước khi hỏi lại người dùng để tránh gây phiền.
+                          Hôm nay là {current_date}.
 			    """)
                 .defaultAdvisors(
                         new PromptChatMemoryAdvisor(chatMemory),
@@ -60,19 +65,20 @@ public class CustomerSupportAssistant {
                         //new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults()), // RAG
                         // 	.withFilterExpression("'documentType' == 'terms-of-service' && region in ['EU', 'US']")),
                         new SimpleLoggerAdvisor())
-                .defaultFunctions("getApplicationDetails","withdrawJobApplication","applyJobApplication") // FUNCTION CALLING
+                .defaultFunctions("getInterviewSchedules") // FUNCTION CALLING
                 .build();
 
     }
 
-    public String chat(String chatId, String userMessageContent) {
+    public String chat( String userMessageContent) {
+        Account account= Utils.getAccount();
         return this.chatClient.prompt()
                 .system(s -> s.param("current_date", LocalDate.now().toString()))
                 .user(userMessageContent)
                 .advisors(a -> a
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, account.getId())
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100)
-                       // .param(QuestionAnswerAdvisor.FILTER_EXPRESSION, "chatId == '" + chatId + "'") // Sửa phần bộ lọc
+                        //.param(QuestionAnswerAdvisor.FILTER_EXPRESSION, "accountId == '" + account.getId() + "'") // Sửa phần bộ lọc
                 )
                 .call().content();
     }

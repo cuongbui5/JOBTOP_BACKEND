@@ -1,9 +1,11 @@
 package com.example.jobs_top.service;
 
+import com.example.jobs_top.dto.req.CreateNotification;
 import com.example.jobs_top.dto.req.UpdateJobStatusRequest;
 import com.example.jobs_top.dto.res.*;
 import com.example.jobs_top.dto.view.JobCardView;
 import com.example.jobs_top.model.*;
+import com.example.jobs_top.model.enums.Action;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
 import com.example.jobs_top.model.enums.JobType;
@@ -18,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -29,18 +32,33 @@ public class JobService {
     private final CompanyService companyService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ElasticService elasticService;
+    private final NotificationService notificationService;
+    private final AccountPlanService accountPlanService;
 
-    public JobService(JobRepository jobRepository, CompanyService companyService, RedisTemplate<String, Object> redisTemplate, ElasticService elasticService) {
+
+    public JobService(JobRepository jobRepository, CompanyService companyService, RedisTemplate<String, Object> redisTemplate, ElasticService elasticService, NotificationService notificationService, AccountPlanService accountPlanService) {
         this.jobRepository = jobRepository;
         this.companyService = companyService;
         this.redisTemplate = redisTemplate;
         this.elasticService = elasticService;
+        this.notificationService = notificationService;
+        this.accountPlanService = accountPlanService;
     }
 
 
-
+    @Transactional
     public Job createJob(Job job){
         Account account=Utils.getAccount();
+        AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
+        if(accountPlan.getRemainingPosts()==0){
+            throw new IllegalArgumentException("Gói hiện tại đã hết lượt đăng");
+        }
+
+        if(accountPlan.getExpiryDate().isBefore(LocalDateTime.now())){
+            throw new IllegalArgumentException("Gói hiện tại đã hết hạn sử dụng");
+        }
+
+        accountPlanService.updateRemainingPosts(accountPlan.getId(), Action.DECREASE);
         Company company = companyService.getCompanyByAccount(account);
         job.setCompany(company);
         job.setStatus(JobStatus.PENDING);
@@ -203,11 +221,24 @@ public class JobService {
     @Transactional
     public Job updateJobStatus(Long id, UpdateJobStatusRequest updateJobStatusRequest) {
         Job job= jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
-        job.setStatus(updateJobStatusRequest.getStatus());
+        JobStatus newStatus=updateJobStatusRequest.getStatus();
+        job.setStatus(newStatus);
         Job savedJob = jobRepository.save(job);
         if (updateJobStatusRequest.getStatus() == JobStatus.APPROVED) {
             elasticService.upsertJobDocument(savedJob);
+        }else {
+            elasticService.deleteJobDocument(savedJob.getId());
+            Account account=Utils.getAccount();
+            AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
+            accountPlanService.updateRemainingPosts(accountPlan.getId(),Action.INCREASE);
         }
+        String content = JobStatus.APPROVED.equals(newStatus)
+                ? String.format("Tin tuyển dụng %s của bạn đã được phê duyệt", job.getTitle())
+                : String.format("Tin tuyển dụng %s của bạn bị từ chối", job.getTitle());
+        notificationService.createNotification(
+                new CreateNotification(job.getCreatedBy(),
+                        content,
+                        "Admin"));
 
         return savedJob;
     }

@@ -1,21 +1,32 @@
 package com.example.jobs_top.controller;
 
-import com.example.jobs_top.service.CustomerSupportAssistant;
+import com.example.jobs_top.dto.res.ApiResponse;
+import com.example.jobs_top.service.CandidateSupportAssistant;
+import com.example.jobs_top.utils.Constants;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+
 
 @RestController
+@RequestMapping("/chatbot")
 public class ChatController {
-    private final CustomerSupportAssistant customerSupportAssistant;
+    private final CandidateSupportAssistant candidateSupportAssistant;
 
-    public ChatController(CustomerSupportAssistant customerSupportAssistant) {
-        this.customerSupportAssistant = customerSupportAssistant;
+    public ChatController(CandidateSupportAssistant candidateSupportAssistant) {
+        this.candidateSupportAssistant = candidateSupportAssistant;
     }
 
-    @GetMapping("/chat")
-    String chat(@RequestParam String message, @RequestParam String chatId) {
-        return customerSupportAssistant.chat(chatId, message);
+    @GetMapping
+    public ResponseEntity<?> chat(@RequestParam String message) {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        candidateSupportAssistant.chat(message)
+                )
+        );
+
     }
 
 

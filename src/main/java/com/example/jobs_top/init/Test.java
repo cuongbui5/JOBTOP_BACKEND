@@ -1,11 +1,9 @@
 package com.example.jobs_top.init;
 
-import com.example.jobs_top.service.CustomerSupportAssistant;
 //import org.springframework.ai.ollama.OllamaChatModel;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
+        import org.springframework.stereotype.Component;
 
 @Component
 public class Test implements CommandLineRunner {
