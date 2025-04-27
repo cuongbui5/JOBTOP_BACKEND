@@ -3,6 +3,7 @@ package com.example.jobs_top.model;
 import com.example.jobs_top.model.enums.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "jobs")
+@DynamicUpdate
 public class Job extends BaseEntity{
     private String title;
     private String location;

@@ -5,6 +5,7 @@ import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobType;
 import com.example.jobs_top.service.*;
 import com.example.jobs_top.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -96,12 +97,12 @@ public class PublicController {
     }
 
     @GetMapping("/jobs/sematic-search")
-    public ResponseEntity<?> sematicSearch(@RequestParam(value = "key") String key) {
+    public ResponseEntity<?> sematicSearch(@RequestParam(value = "key") String key) throws JsonProcessingException {
         return ResponseEntity.ok().body(
                 new ApiResponse<>(
                         200,
                         Constants.SUCCESS_MESSAGE,
-                        elasticService.sematicSearchJobDocument(key)
+                        elasticService.sematicSearchJobDocumentCache(key)
                 )
 
         );

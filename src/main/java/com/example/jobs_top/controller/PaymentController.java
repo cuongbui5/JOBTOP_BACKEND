@@ -4,6 +4,8 @@ import com.example.jobs_top.dto.req.CreateAccountPlan;
 import com.example.jobs_top.service.AccountPlanService;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.StripeObject;
+import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,7 @@ public class PaymentController {
             System.out.println("get event");
             // Xác thực và xử lý sự kiện webhook từ Stripe
             Event event = Webhook.constructEvent(payload, signature, signingSecret);
+            System.out.println(event.getType());
 
 
             // Kiểm tra nếu sự kiện thanh toán thành công
@@ -41,6 +44,22 @@ public class PaymentController {
 
                 // Lưu thông tin thanh toán vào cơ sở dữ liệu
                 //paymentService.savePaymentData(paymentIntent);
+            }
+
+            if ("checkout.session.completed".equals(event.getType())) {
+                // Lấy đối tượng session từ sự kiện
+                Session session = (Session) event.getData().getObject();
+
+                // Lấy metadata từ session
+                String accountId = session.getMetadata().get("accountId");
+                String planId = session.getMetadata().get("planId");
+
+                // In ra metadata (hoặc xử lý theo nhu cầu của bạn)
+                System.out.println("Account ID: " + accountId);
+                System.out.println("Plan ID: " + planId);
+
+                // Bạn có thể tiếp tục xử lý các dữ liệu này (ví dụ: tạo AccountPlan)
+                accountPlanService.createAccountPlan(new CreateAccountPlan(Long.parseLong(planId), Long.parseLong(accountId)));
             }
 
             // Trả lời với Stripe rằng Webhook đã được nhận

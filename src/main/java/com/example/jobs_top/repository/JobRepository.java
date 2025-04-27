@@ -4,6 +4,7 @@ import com.example.jobs_top.dto.res.JobCountDto;
 import com.example.jobs_top.dto.res.RecruiterJobCountDto;
 import com.example.jobs_top.dto.view.JobCardView;
 import com.example.jobs_top.dto.view.JobDetailView;
+import com.example.jobs_top.dto.view.JobStatusCountView;
 import com.example.jobs_top.dto.view.JobTitleView;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.model.enums.ExperienceLevel;
@@ -103,4 +104,11 @@ public interface JobRepository extends JpaRepository<Job, Long> {
              WHERE j.status = 'APPROVED' and j.createdBy=:accountId
     """)
     List<JobTitleView> getAllJobsTitle(@Param("accountId") Long accountId);
+
+    @Query("SELECT j.status AS status, COUNT(j) AS count FROM Job j GROUP BY j.status")
+    List<JobStatusCountView> countJobsByStatus();
+
+    @Query("SELECT j FROM Job j ORDER BY j.views DESC")
+    List<Job> findTopViewedJobs(Pageable pageable);
+
 }

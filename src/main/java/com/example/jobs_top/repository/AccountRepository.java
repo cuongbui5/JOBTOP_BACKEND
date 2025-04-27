@@ -1,5 +1,6 @@
 package com.example.jobs_top.repository;
 
+import com.example.jobs_top.dto.view.RoleCountView;
 import com.example.jobs_top.model.Account;
 import com.example.jobs_top.model.enums.RoleType;
 import org.springframework.data.domain.Page;
@@ -18,8 +19,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByEmail(String email);
 
-    @Query("SELECT a FROM Account a WHERE (:role IS NULL OR a.role = :role)")
-    Page<Account> findByRoleOptional(@Param("role") RoleType role, Pageable pageable);
+
 
     @Query("""
     SELECT a, c FROM Account a
@@ -32,6 +32,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             @Param("companyName") String companyName,
             Pageable pageable
     );
+
+    @Query("SELECT a.role AS role, COUNT(a) AS count FROM Account a GROUP BY a.role")
+    List<RoleCountView> countAccountsByRole();
 
 
 }

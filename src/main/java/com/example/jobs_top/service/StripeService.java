@@ -7,12 +7,21 @@ import com.example.jobs_top.repository.PlanRepository;
 import com.example.jobs_top.utils.Utils;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.model.PaymentIntentCollection;
 import com.stripe.model.checkout.Session;
+import com.stripe.model.reporting.ReportRun;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.reporting.ReportRunCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +65,7 @@ public class StripeService {
         SessionCreateParams params= SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl("http://localhost:5173/payment/success")
                 .setCancelUrl("http://localhost:5173/payment/cancel")
+                .putAllMetadata(metadata)
                 .addLineItem(lineItem)
                 .setPaymentIntentData(
                         SessionCreateParams.PaymentIntentData.builder()
@@ -78,4 +88,6 @@ public class StripeService {
 
 
     }
+
+
 }

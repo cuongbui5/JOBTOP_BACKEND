@@ -5,7 +5,7 @@ import com.example.jobs_top.model.enums.ApplicationStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "applications")

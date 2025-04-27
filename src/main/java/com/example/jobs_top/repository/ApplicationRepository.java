@@ -1,7 +1,9 @@
 package com.example.jobs_top.repository;
 
 import com.example.jobs_top.dto.res.ApplicationStatusStatsDTO;
+import com.example.jobs_top.dto.res.DailyCount;
 import com.example.jobs_top.dto.view.ApplicationRecruiterView;
+import com.example.jobs_top.dto.view.ApplicationStatusCountView;
 import com.example.jobs_top.dto.view.ApplicationUserView;
 import com.example.jobs_top.model.Application;
 import com.example.jobs_top.model.enums.ApplicationStatus;
@@ -13,6 +15,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,7 +111,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             "GROUP BY status WITH ROLLUP", nativeQuery = true)
     List<Object[]> countApplicationsByStatusWithTotal(@Param("jobId") Long jobId);
 
-
-
-
+    @Query("SELECT a.status AS status, COUNT(a) AS count FROM Application a GROUP BY a.status")
+    List<ApplicationStatusCountView> countApplicationsByStatus();
 }

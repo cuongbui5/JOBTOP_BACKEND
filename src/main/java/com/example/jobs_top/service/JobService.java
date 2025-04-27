@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class JobService {
@@ -203,7 +200,7 @@ public class JobService {
         return ip;
     }
 
-
+    @Transactional
     public JobDto getJobById(Long id, HttpServletRequest request,boolean view) {
         String ip = getClientIp(request);
         String redisKey = "job:viewed:" + id + ":" + ip;

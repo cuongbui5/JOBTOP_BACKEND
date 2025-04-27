@@ -1,21 +1,26 @@
 package com.example.jobs_top.service;
 
-import com.example.jobs_top.dto.req.EvaluateRequest;
+
 import com.example.jobs_top.model.Account;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.model.Resume;
 import com.example.jobs_top.repository.JobRepository;
 import com.example.jobs_top.repository.ResumeRepository;
 import com.example.jobs_top.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.tika.Tika;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -28,9 +33,13 @@ public class AiService {
     private final JobRepository jobRepository;
     private final ResumeRepository resumeRepository;
     private final ElasticService elasticService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    public AiService(ChatClient.Builder modelBuilder, ChatMemory chatMemory, JobRepository jobRepository, ResumeRepository resumeRepository, ElasticService elasticService) {
+    public AiService(ChatClient.Builder modelBuilder, ChatMemory chatMemory, JobRepository jobRepository, ResumeRepository resumeRepository, ElasticService elasticService, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
         this.elasticService = elasticService;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
         this.chatClient = modelBuilder
                 .defaultSystem("""
                    Bạn là một chuyên gia tuyển dụng. Dựa vào CV và YÊU CẦU CÔNG VIỆC bên dưới, hãy đánh giá mức độ phù hợp của ứng viên.
@@ -63,6 +72,8 @@ public class AiService {
         }
     }
 
+
+
     public String evaluateFit(Long jobId) {
         Job job=jobRepository.findById(jobId).orElseThrow(()->new IllegalArgumentException("Not found job"));
         Account account=Utils.getAccount();
@@ -84,12 +95,23 @@ public class AiService {
                 .call().content();
     }
 
-    public List<Job> findJobByCv() {
+    public List<Job> findJobByCv() throws JsonProcessingException {
         Account account=Utils.getAccount();
         Resume resume=resumeRepository.findById(account.getResumeDefault())
                 .orElseThrow(()->new IllegalArgumentException("Not found resume"));
+        String cacheKey = "job-suggestion:" + resume.getId();
+        Object cachedObj = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedObj != null) {
+            // Parse the JSON string manually
+            return objectMapper.readValue((String)cachedObj, new TypeReference<List<Job>>() {});
+        }
+
         String cvText=readCVFromUrl(resume.getLink());
-        return elasticService.sematicSearchJobDocument(cvText);
+
+        List<Job> jobs= elasticService.sematicSearchJobDocument(cvText);
+        redisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(jobs) , Duration.ofHours(1));
+        return jobs;
 
     }
 }
