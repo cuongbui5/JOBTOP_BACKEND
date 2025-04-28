@@ -24,6 +24,7 @@ public class Account extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private RoleType role;
     private Long resumeDefault;
+    private Integer freePost=0;
 
     public Long getResumeDefault() {
         return resumeDefault;
@@ -31,6 +32,14 @@ public class Account extends BaseEntity {
 
     public void setResumeDefault(Long resumeDefault) {
         this.resumeDefault = resumeDefault;
+    }
+
+    public Integer getFreePost() {
+        return freePost;
+    }
+
+    public void setFreePost(Integer freePost) {
+        this.freePost = freePost;
     }
 
     public RoleType getRole() {

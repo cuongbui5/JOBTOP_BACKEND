@@ -4,6 +4,8 @@ import com.example.jobs_top.dto.req.LoginRequest;
 import com.example.jobs_top.dto.req.RegisterRequest;
 import com.example.jobs_top.dto.res.ApiResponse;
 import com.example.jobs_top.service.AuthService;
+import com.example.jobs_top.utils.Constants;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
@@ -22,8 +24,8 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok().body(
                 new ApiResponse<>(
-                        200,
-                        "success",
+                        HttpStatus.OK.value(),
+                        Constants.SUCCESS_MESSAGE,
                         authService.login(loginRequest)
                 )
         );
@@ -33,8 +35,8 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
         return ResponseEntity.ok().body(
                 new ApiResponse<>(
-                        200,
-                        "success",
+                        HttpStatus.OK.value(),
+                        Constants.SUCCESS_MESSAGE,
                         authService.register(registerRequest)
                 )
         );

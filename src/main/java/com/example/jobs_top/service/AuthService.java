@@ -59,6 +59,9 @@ public class AuthService {
         account.setStatus(AccountStatus.ACTIVE);
         account.setFullName(registerRequest.getFullName());
         account.setRole(registerRequest.getRole());
+        if (registerRequest.getRole()==RoleType.EMPLOYER) {
+            account.setFreePost(3);
+        }
 
         return accountRepository.save(account);
     }

@@ -9,6 +9,7 @@ import com.example.jobs_top.model.enums.Action;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobStatus;
 import com.example.jobs_top.model.enums.JobType;
+import com.example.jobs_top.repository.AccountRepository;
 import com.example.jobs_top.repository.JobRepository;
 import com.example.jobs_top.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,29 +32,41 @@ public class JobService {
     private final ElasticService elasticService;
     private final NotificationService notificationService;
     private final AccountPlanService accountPlanService;
+    private final AccountRepository accountRepository;
 
 
-    public JobService(JobRepository jobRepository, CompanyService companyService, RedisTemplate<String, Object> redisTemplate, ElasticService elasticService, NotificationService notificationService, AccountPlanService accountPlanService) {
+    public JobService(JobRepository jobRepository, CompanyService companyService, RedisTemplate<String, Object> redisTemplate, ElasticService elasticService, NotificationService notificationService, AccountPlanService accountPlanService, AccountRepository accountRepository) {
         this.jobRepository = jobRepository;
         this.companyService = companyService;
         this.redisTemplate = redisTemplate;
         this.elasticService = elasticService;
         this.notificationService = notificationService;
         this.accountPlanService = accountPlanService;
+        this.accountRepository = accountRepository;
     }
 
 
     @Transactional
     public Job createJob(Job job){
         Account account=Utils.getAccount();
-        AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
-        if(accountPlan.getRemainingPosts()==0){
-            throw new IllegalArgumentException("Gói hiện tại đã hết lượt đăng");
+        Integer freePost=account.getFreePost();
+        if(freePost>0){
+            Company company = companyService.getCompanyByAccount(account);
+            job.setCompany(company);
+            job.setStatus(JobStatus.PENDING);
+            job.setViews(0);
+            job.setCreatedBy(account.getId());
+            account.setFreePost(freePost-1);
+            accountRepository.save(account);
+            return jobRepository.save(job);
         }
 
-        if(accountPlan.getExpiryDate().isBefore(LocalDateTime.now())){
-            throw new IllegalArgumentException("Gói hiện tại đã hết hạn sử dụng");
+        AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
+
+        if(accountPlan.getRemainingPosts()==0||accountPlan.getExpiryDate().isBefore(LocalDateTime.now())){
+            throw new IllegalArgumentException("Gói hiện tại đã không còn hiệu lực hoặc hết lượt đăng");
         }
+
 
         accountPlanService.updateRemainingPosts(accountPlan.getId(), Action.DECREASE);
         Company company = companyService.getCompanyByAccount(account);
@@ -81,7 +94,7 @@ public class JobService {
         jobUpdated.setLocation(job.getLocation());
         jobUpdated.setRequirements(job.getRequirements());
         jobUpdated.setCity(job.getCity());
-        Job jobSaved= jobRepository.save(jobUpdated);
+        Job jobSaved = jobRepository.save(jobUpdated);
         if(jobSaved.getStatus()==JobStatus.APPROVED){
             elasticService.upsertJobDocument(jobSaved);
         }
@@ -225,9 +238,9 @@ public class JobService {
             elasticService.upsertJobDocument(savedJob);
         }else {
             elasticService.deleteJobDocument(savedJob.getId());
-            Account account=Utils.getAccount();
-            AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
-            accountPlanService.updateRemainingPosts(accountPlan.getId(),Action.INCREASE);
+            //Account account=Utils.getAccount();
+            //AccountPlan accountPlan=accountPlanService.findByAccountId(account.getId());
+            //accountPlanService.updateRemainingPosts(accountPlan.getId(),Action.INCREASE);
         }
         String content = JobStatus.APPROVED.equals(newStatus)
                 ? String.format("Tin tuyển dụng %s của bạn đã được phê duyệt", job.getTitle())
