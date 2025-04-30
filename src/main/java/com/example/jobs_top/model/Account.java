@@ -14,7 +14,6 @@ import jakarta.persistence.*;
         })
 @Entity
 public class Account extends BaseEntity {
-    private String fullName;
     private String avatar;
     private String email;
     @JsonIgnore
@@ -58,13 +57,7 @@ public class Account extends BaseEntity {
         this.status = status;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
 
     public String getAvatar() {
         return avatar;

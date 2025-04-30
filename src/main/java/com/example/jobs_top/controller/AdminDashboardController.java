@@ -63,16 +63,7 @@ public class AdminDashboardController {
         );
     }
 
-    @GetMapping("/jobs/top-view")
-    public ResponseEntity<?> findTopViewedJobs(@RequestParam("top") int top){
-        return ResponseEntity.ok().body(
-                new ApiResponse<>(
-                        200,
-                        Constants.SUCCESS_MESSAGE,
-                        adminDashboardService.getTopNViewedJobs(top)
-                )
-        );
-    }
+
 
     @GetMapping("/plans/top-used")
     public ResponseEntity<?> getTopUsedPlans(){

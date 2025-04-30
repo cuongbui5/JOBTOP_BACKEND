@@ -33,7 +33,6 @@ public class AccountService {
     public Account updateAccount(UpdateAccountRequest updateAccountRequest) {
         Account account = Utils.getAccount();
         account.setAvatar(updateAccountRequest.getAvatar());
-        account.setFullName(updateAccountRequest.getFullName());
         if (StringUtils.hasText(updateAccountRequest.getNewPassword())) {
             if (!passwordEncoder.matches(updateAccountRequest.getCurrentPassword(), account.getPassword())) {
                 throw new RuntimeException("Sai mật khẩu");

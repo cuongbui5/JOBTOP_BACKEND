@@ -10,7 +10,6 @@ public class AccountDto {
     private Long id;
     private String email;
     private String avatar;
-    private String fullName;
     private AccountStatus status;
     private Long companyId;
     private String companyName;
@@ -21,7 +20,6 @@ public class AccountDto {
         this.id = account.getId();
         this.email = account.getEmail();
         this.avatar = account.getAvatar();
-        this.fullName = account.getFullName();
         this.status = account.getStatus();
         this.role = account.getRole();
 
@@ -82,13 +80,6 @@ public class AccountDto {
         this.avatar = avatar;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
 
     public RoleType getRole() {
         return role;

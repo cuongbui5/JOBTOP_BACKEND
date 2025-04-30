@@ -1,6 +1,9 @@
 package com.example.jobs_top.model;
 
+import com.example.jobs_top.model.enums.EducationLevel;
+import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.Gender;
+import com.example.jobs_top.model.enums.PositionLevel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -9,35 +12,69 @@ import java.time.LocalDate;
 @Table(name = "candidates")
 @Entity
 public class Candidate extends BaseEntity{
+    private String fullName;
     @Column(unique = true, nullable = false)
     private String phone;
-
     private LocalDate dateOfBirth;
-
+    private String city;
     private String address;
-
-    @Column(length = 2000)
-    private String skills;
-
-
+    private String workLocation;
+    @Enumerated(EnumType.STRING)
+    private PositionLevel positionLevel;
     @Column(length = 1000)
     private String description;
-
-    @Column(length = 1000)
-    private String education;
-
+    @Enumerated(EnumType.STRING)
+    private EducationLevel education;
     @Enumerated(EnumType.STRING)
     private Gender gender;
+    @Enumerated(EnumType.STRING)
+    private ExperienceLevel workExperience;
+    private String desiredPosition;
+    private String expectedSalary;
 
-    private Boolean publicProfile = true;
-
-    @Column(length = 2000)
-    private String workExperience;
-
+    private Boolean searchable = true;
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id",referencedColumnName = "id")
     private Account account;
+
+    public String getWorkLocation() {
+        return workLocation;
+    }
+
+    public String getExpectedSalary() {
+        return expectedSalary;
+    }
+
+    public void setExpectedSalary(String expectedSalary) {
+        this.expectedSalary = expectedSalary;
+    }
+
+    public void setWorkLocation(String workLocation) {
+        this.workLocation = workLocation;
+    }
+
+    public String getDesiredPosition() {
+        return desiredPosition;
+    }
+
+    public void setDesiredPosition(String desiredPosition) {
+        this.desiredPosition = desiredPosition;
+    }
+
+
+
+    public PositionLevel getPositionLevel() {
+        return positionLevel;
+    }
+
+    public void setPositionLevel(PositionLevel positionLevel) {
+        this.positionLevel = positionLevel;
+    }
+
+    public void setWorkExperience(ExperienceLevel workExperience) {
+        this.workExperience = workExperience;
+    }
 
     public Gender getGender() {
         return gender;
@@ -47,22 +84,28 @@ public class Candidate extends BaseEntity{
         this.gender = gender;
     }
 
-    public Boolean getPublicProfile() {
-        return publicProfile;
+    public String getCity() {
+        return city;
     }
 
-    public void setPublicProfile(Boolean publicProfile) {
-        this.publicProfile = publicProfile;
+    public String getFullName() {
+        return fullName;
     }
 
-
-
-    public String getWorkExperience() {
-        return workExperience;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
-    public void setWorkExperience(String workExperience) {
-        this.workExperience = workExperience;
+    public EducationLevel getEducation() {
+        return education;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setEducation(EducationLevel education) {
+        this.education = education;
     }
 
     public Account getAccount() {
@@ -81,7 +124,17 @@ public class Candidate extends BaseEntity{
         this.phone = phone;
     }
 
+    public ExperienceLevel getWorkExperience() {
+        return workExperience;
+    }
 
+    public Boolean getSearchable() {
+        return searchable;
+    }
+
+    public void setSearchable(Boolean searchable) {
+        this.searchable = searchable;
+    }
 
     public String getDescription() {
         return description;
@@ -91,13 +144,7 @@ public class Candidate extends BaseEntity{
         this.description = description;
     }
 
-    public String getEducation() {
-        return education;
-    }
 
-    public void setEducation(String education) {
-        this.education = education;
-    }
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
@@ -115,13 +162,7 @@ public class Candidate extends BaseEntity{
         this.address = address;
     }
 
-    public String getSkills() {
-        return skills;
-    }
 
-    public void setSkills(String skills) {
-        this.skills = skills;
-    }
 
 
 

@@ -20,20 +20,47 @@ public class PublicController {
     private final InterviewReviewService interviewReviewService;
     private final ElasticService elasticService;
     private final ApplicationService applicationService;
+    private final AdminDashboardService adminDashboardService;
 
-    public PublicController(CompanyService companyService, JobService jobService, CandidateService candidateService, InterviewReviewService interviewReviewService, ElasticService elasticService, ApplicationService applicationService) {
+    public PublicController(CompanyService companyService, JobService jobService, CandidateService candidateService, InterviewReviewService interviewReviewService, ElasticService elasticService, ApplicationService applicationService, AdminDashboardService adminDashboardService) {
         this.companyService = companyService;
         this.jobService = jobService;
         this.candidateService = candidateService;
         this.interviewReviewService = interviewReviewService;
         this.elasticService = elasticService;
         this.applicationService = applicationService;
+        this.adminDashboardService = adminDashboardService;
     }
     @GetMapping("/count-jobs-by-location")
     public ResponseEntity<?> getJobCountByLocation() {
         return ResponseEntity.ok().body(
-                new ApiResponse<>(200,"Success",jobService.getJobCountByLocation())
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        jobService.getJobCountByLocation())
         );
+    }
+
+    @GetMapping("/desired-positions")
+    public ResponseEntity<?> getDesiredPositions() {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        candidateService.getAllUniqueDesiredPositions())
+        );
+
+    }
+
+    @GetMapping("/cities")
+    public ResponseEntity<?> getCities() {
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        candidateService.getAllUniqueCities())
+        );
+
     }
 
     @GetMapping("/companies")
@@ -105,6 +132,16 @@ public class PublicController {
                         elasticService.sematicSearchJobDocumentCache(key)
                 )
 
+        );
+    }
+    @GetMapping("/jobs/top-view")
+    public ResponseEntity<?> findTopViewedJobs(@RequestParam("top") int top){
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(
+                        200,
+                        Constants.SUCCESS_MESSAGE,
+                        adminDashboardService.getTopNViewedJobs(top)
+                )
         );
     }
 

@@ -84,7 +84,7 @@ public class InitData implements CommandLineRunner {
         candidate.setPhone("012345678");
 
 
-        candidate.setSkills("JAVA, C#, C++");
+        //candidate.setSkills("JAVA, C#, C++");
         candidate.setDateOfBirth(LocalDate.of(2003, 5, 21));
         candidateRepository.save(candidate);
 
