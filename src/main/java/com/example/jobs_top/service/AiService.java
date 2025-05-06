@@ -1,9 +1,12 @@
 package com.example.jobs_top.service;
 
 
+import com.example.jobs_top.dto.res.JobDto;
 import com.example.jobs_top.model.Account;
+import com.example.jobs_top.model.Candidate;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.model.Resume;
+import com.example.jobs_top.repository.CandidateRepository;
 import com.example.jobs_top.repository.JobRepository;
 import com.example.jobs_top.repository.ResumeRepository;
 import com.example.jobs_top.utils.Utils;
@@ -22,6 +25,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
@@ -35,11 +39,13 @@ public class AiService {
     private final ElasticService elasticService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final CandidateRepository candidateRepository;
 
-    public AiService(ChatClient.Builder modelBuilder, ChatMemory chatMemory, JobRepository jobRepository, ResumeRepository resumeRepository, ElasticService elasticService, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+    public AiService(ChatClient.Builder modelBuilder, ChatMemory chatMemory, JobRepository jobRepository, ResumeRepository resumeRepository, ElasticService elasticService, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper, CandidateRepository candidateRepository) {
         this.elasticService = elasticService;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.candidateRepository = candidateRepository;
         this.chatClient = modelBuilder
                 .defaultSystem("""
                    Bạn là một chuyên gia tuyển dụng. Dựa vào CV và YÊU CẦU CÔNG VIỆC bên dưới, hãy đánh giá mức độ phù hợp của ứng viên.
@@ -95,7 +101,7 @@ public class AiService {
                 .call().content();
     }
 
-    public List<Job> findJobByCv() throws JsonProcessingException {
+    public List<JobDto> findJobByCv() throws JsonProcessingException {
         Account account=Utils.getAccount();
         Resume resume=resumeRepository.findById(account.getResumeDefault())
                 .orElseThrow(()->new IllegalArgumentException("Not found resume"));
@@ -104,14 +110,38 @@ public class AiService {
 
         if (cachedObj != null) {
             // Parse the JSON string manually
-            return objectMapper.readValue((String)cachedObj, new TypeReference<List<Job>>() {});
+            return objectMapper.readValue((String)cachedObj, new TypeReference<List<JobDto>>() {});
         }
 
         String cvText=readCVFromUrl(resume.getLink());
 
-        List<Job> jobs= elasticService.sematicSearchJobDocument(cvText);
+        List<JobDto> jobs= elasticService.sematicSearchJobDocument(cvText);
         redisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(jobs) , Duration.ofHours(1));
         return jobs;
+
+    }
+
+    public List<JobDto> findTopJobByAccountCv(Account account,int topK) throws JsonProcessingException {
+        Resume resume=resumeRepository.findById(account.getResumeDefault())
+                .orElseThrow(()->new IllegalArgumentException("Not found resume"));
+        String cacheKey = "job-suggestion:" + resume.getId();
+        Object cachedObj = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedObj != null) {
+            // Parse the JSON string manually
+            return objectMapper.readValue((String)cachedObj, new TypeReference<List<JobDto>>() {});
+        }
+
+        String cvText=readCVFromUrl(resume.getLink());
+
+        List<JobDto> jobs= elasticService.sematicSearchJobDocumentWithTopK(cvText,topK);
+        redisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(jobs) , Duration.ofHours(1));
+        return jobs;
+
+    }
+    public List<JobDto> findTopJobByCandidate(Account account,int topK) {
+        Optional<Candidate> candidate=candidateRepository.findByAccountId(account.getId());
+        return candidate.map(value -> elasticService.sematicSearchJobDocumentWithTopK(value.getDesiredPosition(), topK)).orElse(null);
 
     }
 }

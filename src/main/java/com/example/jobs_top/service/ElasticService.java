@@ -3,6 +3,9 @@ package com.example.jobs_top.service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import com.example.jobs_top.dto.res.CompanyDto;
+import com.example.jobs_top.dto.res.JobDto;
+import com.example.jobs_top.model.Company;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.model.enums.ExperienceLevel;
 import com.example.jobs_top.model.enums.JobType;
@@ -17,6 +20,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -61,13 +66,13 @@ public class ElasticService {
 
 
 
-    public List<Job> sematicSearchJobDocumentCache(String query) throws JsonProcessingException {
+    public List<JobDto> sematicSearchJobDocumentCache(String query) throws JsonProcessingException {
         String key = "job:search:ai" + query.toLowerCase();
         Object cachedObj = redisTemplate.opsForValue().get(key);
 
         if (cachedObj != null) {
             // Parse the JSON string manually
-            return objectMapper.readValue((String)cachedObj, new TypeReference<List<Job>>() {});
+            return objectMapper.readValue((String)cachedObj, new TypeReference<List<JobDto>>() {});
         }
         List<Document> results= vectorStore
                 .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
@@ -83,7 +88,7 @@ public class ElasticService {
         }
 
         // Map documents to jobs
-        List<Job> jobs = results.stream()
+        List<JobDto> jobs = results.stream()
                 .map(doc -> mapToJob(doc.getMetadata()))
                 .toList();
 
@@ -94,7 +99,7 @@ public class ElasticService {
 
     }
 
-    public List<Job> sematicSearchJobDocument(String query) {
+    public List<JobDto> sematicSearchJobDocument(String query) {
         List<Document> results= vectorStore
                 .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
                         .withTopK(20).withSimilarityThreshold(0.8));
@@ -107,11 +112,24 @@ public class ElasticService {
         return results.stream().map(doc -> mapToJob(doc.getMetadata())).toList();
 
     }
+    public List<JobDto> sematicSearchJobDocumentWithTopK(String query, int topK) {
+        List<Document> results= vectorStore
+                .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
+                        .withTopK(topK).withSimilarityThreshold(0.8));
+
+
+        if (results.isEmpty()) {
+            return List.of();
+        }
+
+        return results.stream().map(doc -> mapToJob(doc.getMetadata())).toList();
+
+    }
 
 
 
-    public Job mapToJob(Map<String, Object> metadata) {
-        Job job = new Job();
+    public JobDto mapToJob(Map<String, Object> metadata) {
+        JobDto job = new JobDto();
         job.setId(Long.parseLong(metadata.get("jobId").toString()));
         job.setTitle(metadata.get("title").toString());
         job.setJobType(JobType.valueOf((String) metadata.get("jobType")));
@@ -121,6 +139,8 @@ public class ElasticService {
         job.setSalaryMax((Integer) metadata.get("salaryMax"));
         job.setRequirements((String) metadata.get("requirements"));
         job.setDescription((String) metadata.get("description"));
+        job.setApplicationDeadline(LocalDate.parse( (String) metadata.get("applicationDeadline")));
+        job.setCompany(new CompanyDto((String) metadata.get("companyName")));
         return job;
     }
 
@@ -139,16 +159,18 @@ public class ElasticService {
             );
 
 
-            Map<String, Object> metadata = Map.of(
-                    "jobId", job.getId(),
-                    "title", job.getTitle(),
-                    "city", job.getCity(),
-                    "jobType", job.getJobType().toString(),
-                    "experienceLevel", job.getExperienceLevel().toString(),
-                    "salaryMin", job.getSalaryMin(),
-                    "salaryMax", job.getSalaryMax(),
-                    "requirements", job.getRequirements(),
-                    "description", job.getDescription()
+            Map<String, Object> metadata = Map.ofEntries(
+                    Map.entry("jobId", job.getId()),
+                    Map.entry("title", job.getTitle()),
+                    Map.entry("city", job.getCity()),
+                    Map.entry("jobType", job.getJobType().toString()),
+                    Map.entry("experienceLevel", job.getExperienceLevel().toString()),
+                    Map.entry("salaryMin", job.getSalaryMin()),
+                    Map.entry("salaryMax", job.getSalaryMax()),
+                    Map.entry("requirements", job.getRequirements()),
+                    Map.entry("description", job.getDescription()),
+                    Map.entry("companyName", job.getCompany().getName()),
+                    Map.entry("applicationDeadline", job.getApplicationDeadline().toString())
             );
 
             var document = new Document(content,metadata);

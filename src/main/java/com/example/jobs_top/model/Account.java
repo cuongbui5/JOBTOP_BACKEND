@@ -24,6 +24,15 @@ public class Account extends BaseEntity {
     private RoleType role;
     private Long resumeDefault;
     private Integer freePost=0;
+    private Boolean receiveEmail = false;
+
+    public Boolean getReceiveEmail() {
+        return receiveEmail;
+    }
+
+    public void setReceiveEmail(Boolean receiveEmail) {
+        this.receiveEmail = receiveEmail;
+    }
 
     public Long getResumeDefault() {
         return resumeDefault;

@@ -60,6 +60,8 @@ public class AuthService {
         account.setRole(registerRequest.getRole());
         if (registerRequest.getRole()==RoleType.EMPLOYER) {
             account.setFreePost(3);
+        }else if(registerRequest.getRole()==RoleType.CANDIDATE) {
+            account.setReceiveEmail(true);
         }
 
         return accountRepository.save(account);

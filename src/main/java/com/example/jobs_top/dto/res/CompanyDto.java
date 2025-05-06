@@ -5,6 +5,13 @@ public class CompanyDto {
     private String name;
     private String logo;
 
+    public CompanyDto() {
+    }
+
+    public CompanyDto(String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }

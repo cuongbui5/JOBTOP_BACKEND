@@ -35,6 +35,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a.role AS role, COUNT(a) AS count FROM Account a GROUP BY a.role")
     List<RoleCountView> countAccountsByRole();
+    List<Account> findByReceiveEmailTrue();
+
+
 
 
 }

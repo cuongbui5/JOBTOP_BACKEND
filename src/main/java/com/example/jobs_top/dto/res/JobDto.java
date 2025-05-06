@@ -36,7 +36,8 @@ public class JobDto {
         this.company = company;
     }
 
-
+    public JobDto() {
+    }
 
     public JobDto(Job job) {
         BeanUtils.copyProperties(job, this);

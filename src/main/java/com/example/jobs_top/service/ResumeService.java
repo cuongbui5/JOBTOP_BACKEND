@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
+
 @Service
 public class ResumeService {
     private final ResumeRepository resumeRepository;
@@ -34,7 +35,7 @@ public class ResumeService {
         resume.setAccount(Utils.getAccount());
         return resumeRepository.save(resume);
     }
-
+    @Transactional
     public Resume updateResume(Long id,Resume resume) {
         Resume cv=resumeRepository.findById(id).orElseThrow(()->new RuntimeException("resume not found"));
         cv.setName(resume.getName());
@@ -43,12 +44,17 @@ public class ResumeService {
     }
 
     public void deleteResume(Long id) {
+        Account account=Utils.getAccount();
+        if(Objects.equals(account.getResumeDefault(), id)){
+            throw new IllegalArgumentException("Không thể xóa hồ sơ mặc định");
+        }
 
         resumeRepository.deleteById(id);
 
 
     }
 
+    @Transactional
     public Account setResumeDefault(Long id) {
         Account account=Utils.getAccount();
         account.setResumeDefault(id);

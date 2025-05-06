@@ -5,6 +5,15 @@ public class UpdateAccountRequest {
     private String avatar;
     private String currentPassword;
     private String newPassword;
+    private Boolean receiveEmail;
+
+    public Boolean getReceiveEmail() {
+        return receiveEmail;
+    }
+
+    public void setReceiveEmail(Boolean receiveEmail) {
+        this.receiveEmail = receiveEmail;
+    }
 
     public String getAvatar() {
         return avatar;

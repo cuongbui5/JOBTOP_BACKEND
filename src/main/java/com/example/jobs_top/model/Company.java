@@ -26,6 +26,13 @@ public class Company extends BaseEntity{
     @JoinColumn(name = "category_id",referencedColumnName = "id")
     private Category category;
 
+    public Company(String name) {
+        this.name = name;
+    }
+
+    public Company() {
+    }
+
     public Integer getFoundedDate() {
         return foundedDate;
     }
