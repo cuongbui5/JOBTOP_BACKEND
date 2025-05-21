@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "interview_reviews")
 public class InterviewReview extends BaseEntity{
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_schedule_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
     private InterviewSchedule interviewSchedule;

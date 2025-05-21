@@ -1,7 +1,7 @@
 package com.example.jobs_top.controller;
 
 import com.example.jobs_top.dto.res.ApiResponse;
-import com.example.jobs_top.service.CandidateSupportAssistant;
+import com.example.jobs_top.service.chatbot.CandidateSupportAssistant;
 import com.example.jobs_top.utils.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

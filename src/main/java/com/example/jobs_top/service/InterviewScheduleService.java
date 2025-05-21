@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +34,13 @@ public class InterviewScheduleService {
 
     @Transactional
     public InterviewSchedule createInterviewSchedule(CreateInterviewSchedule createInterviewSchedule) {
+        if (createInterviewSchedule.getInterviewDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày phỏng vấn phải lớn hơn ngày hiện tại");
+        }
+        if (createInterviewSchedule.getStartTime().isAfter(createInterviewSchedule.getEndTime()) ||
+                createInterviewSchedule.getStartTime().equals(createInterviewSchedule.getEndTime())) {
+            throw new IllegalArgumentException("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
+        }
         InterviewSchedule interviewSchedule = new InterviewSchedule();
         interviewSchedule.setInterviewNote(createInterviewSchedule.getInterviewNote());
         interviewSchedule.setOfficeAddress(createInterviewSchedule.getOfficeAddress());
@@ -49,7 +57,14 @@ public class InterviewScheduleService {
         InterviewSchedule interviewSchedule = interviewScheduleRepository.findById(id).orElseThrow(()->new RuntimeException("InterviewSchedule not found"));
         if(interviewSchedule.getStatus() != InterviewStatus.SCHEDULED){
             //chỉ được cập nhật khi đã lên lịch
-            throw new RuntimeException("Hành động không được chấp nhận");
+            throw new IllegalArgumentException("Hành động không được chấp nhận");
+        }
+        if (createInterviewSchedule.getInterviewDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Không thể cập nhật lịch phỏng vấn với ngày đã qua");
+        }
+        if (createInterviewSchedule.getStartTime().isAfter(createInterviewSchedule.getEndTime()) ||
+                createInterviewSchedule.getStartTime().equals(createInterviewSchedule.getEndTime())) {
+            throw new IllegalArgumentException("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
         }
         interviewSchedule.setInterviewNote(createInterviewSchedule.getInterviewNote());
         interviewSchedule.setOfficeAddress(createInterviewSchedule.getOfficeAddress());

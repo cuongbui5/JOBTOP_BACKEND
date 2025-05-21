@@ -56,7 +56,7 @@ public class AccountService {
 
     public PaginatedResponse<?> getAllAccounts(RoleType role,String companyName, int page, int size) {
         Pageable pageable= PageRequest.of(page-1,size, Sort.by("createdAt").descending());
-        Page<Object[]> results = accountRepository.findAccountsWithCompanyAndFilter(role,companyName, pageable);
+        Page<Object[]> results = accountRepository.findAccountsWithFilter(role,companyName, pageable);
         Page<AccountDto> dtoPage = results.map(result -> {
             Account account = (Account) result[0];
             Company company = (Company) result[1];

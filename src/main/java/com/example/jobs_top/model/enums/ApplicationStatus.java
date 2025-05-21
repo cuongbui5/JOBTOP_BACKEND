@@ -21,11 +21,12 @@ public enum ApplicationStatus {
     }
     public boolean canTransitionTo(ApplicationStatus newStatus) {
         return switch (this) {
-            case PENDING -> newStatus == VIEWED || newStatus == REJECTED;
+            case PENDING -> newStatus == VIEWED || newStatus == REJECTED || newStatus == APPROVED;
             case VIEWED -> newStatus == APPROVED || newStatus == REJECTED;
             case APPROVED -> newStatus == ADDED_TO_INTERVIEW || newStatus == REJECTED;
-            case ADDED_TO_INTERVIEW -> newStatus == COMPLETED || newStatus == NO_SHOW || newStatus == REJECTED;
-            case NO_SHOW, COMPLETED, REJECTED -> false;
+            case ADDED_TO_INTERVIEW -> newStatus == COMPLETED || newStatus == REJECTED;
+            case COMPLETED -> newStatus == NO_SHOW;
+            case NO_SHOW, REJECTED -> false;
         };
     }
 }

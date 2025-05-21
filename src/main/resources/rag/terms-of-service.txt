@@ -1,16 +1,85 @@
-Welcome to Job Top! By using our platform, you agree to the following terms. If you do not agree with any part of these terms, please stop using the application immediately.
+ĐIỀU KHOẢN DỊCH VỤ – JOBTOP
+1. Giới thiệu
+Chào mừng bạn đến với JobTop – nền tảng kết nối ứng viên và nhà tuyển dụng một cách thông minh và hiệu quả.
 
-1. Job Posting
-Employers can post job vacancies through the app.
-The content of the post must be appropriate, truthful and not violate the law.
-The post may be removed if it violates our policies or is reported by a user.
+Khi sử dụng website JobTop (gồm cả ứng dụng web và dịch vụ liên quan), bạn đồng ý tuân thủ các Điều khoản dịch vụ sau đây. Vui lòng đọc kỹ trước khi sử dụng.
 
-2. Job Applications
-Candidates can apply for jobs posted on the application.
-Candidates must ensure that the information in their profile is accurate and not misleading.
-Applying for a job does not guarantee that the candidate will be offered a job.
+2. Đối tượng áp dụng
+Điều khoản này áp dụng cho:
 
-3. Contact Us
-If you have any questions or concerns about the terms of service, please contact:
-Email: JTsupport@gmail.com
-Hotline: +84 0963377000
+Ứng viên: Người tìm kiếm việc làm, đăng ký tài khoản để nộp đơn, tạo hồ sơ và sử dụng các tính năng hỗ trợ.
+
+Nhà tuyển dụng: Doanh nghiệp đăng tin tuyển dụng, quản lý ứng viên, và sử dụng dịch vụ liên quan.
+
+Khách truy cập: Người dùng chưa đăng nhập nhưng vẫn có thể xem tin tuyển dụng, công ty,...
+
+3. Tài khoản người dùng
+Người dùng cần cung cấp thông tin chính xác khi đăng ký.
+
+Người dùng chịu trách nhiệm bảo mật thông tin đăng nhập.
+
+JobTop có quyền khóa hoặc hạn chế tài khoản nếu phát hiện hành vi vi phạm, giả mạo, lừa đảo, hoặc làm ảnh hưởng tới hệ thống.
+
+4. Quyền và nghĩa vụ của ứng viên
+Ứng viên có thể:
+
+Đăng tải và quản lý hồ sơ cá nhân (CV, thông tin liên hệ,…)
+
+Tìm kiếm, lưu công việc, nộp đơn ứng tuyển, theo dõi lịch phỏng vấn.
+
+Giao tiếp trực tiếp với nhà tuyển dụng thông qua hệ thống nhắn tin.
+
+Sử dụng các công cụ AI như đánh giá độ phù hợp công việc, luyện phỏng vấn,...
+
+Ứng viên cam kết cung cấp thông tin trung thực, không đăng tải nội dung phản cảm, spam hoặc sai lệch.
+
+5. Quyền và nghĩa vụ của nhà tuyển dụng
+Nhà tuyển dụng có thể:
+
+Đăng tin tuyển dụng (sau khi được phê duyệt bởi Admin).
+
+Quản lý đơn ứng tuyển, đặt lịch phỏng vấn, trò chuyện với ứng viên.
+
+Mua gói dịch vụ để sử dụng các tiện ích nâng cao.
+
+Nhà tuyển dụng cam kết tin đăng đúng sự thật, không lừa đảo, dụ dỗ hoặc lợi dụng dữ liệu người dùng.
+
+6. Quyền và nghĩa vụ của Admin
+Admin có toàn quyền quản trị hệ thống:
+
+Phê duyệt tin đăng, khóa tài khoản vi phạm, xử lý báo cáo.
+
+Giám sát hoạt động hệ thống nhằm đảm bảo tính minh bạch và an toàn.
+
+Quản lý nội dung và dịch vụ (gói dịch vụ, thống kê,...)
+
+7. Dữ liệu và bảo mật
+JobTop lưu trữ dữ liệu người dùng an toàn qua hệ thống bảo mật hiện đại.
+
+Dữ liệu CV, avatar được lưu trữ thông qua dịch vụ bên thứ ba (Cloudinary).
+
+Chúng tôi sử dụng Redis để tối ưu hiệu suất truy cập và bảo vệ hệ thống bằng các cơ chế chống spam (rate limiting).
+
+8. Giao dịch và thanh toán
+Việc thanh toán gói dịch vụ được thực hiện qua nền tảng Stripe.
+
+Tất cả giao dịch được mã hóa và xử lý an toàn.
+
+JobTop không lưu trữ thông tin thẻ thanh toán của người dùng.
+
+9. Trách nhiệm và giới hạn pháp lý
+JobTop không chịu trách nhiệm đối với các thiệt hại phát sinh từ việc người dùng:
+
+Cung cấp thông tin sai lệch.
+
+Bị từ chối tuyển dụng hoặc bị lừa đảo từ các bên liên quan (trong phạm vi ngoài hệ thống kiểm soát).
+
+Chúng tôi nỗ lực tối đa để bảo vệ thông tin và đảm bảo nền tảng hoạt động ổn định.
+
+10. Điều khoản chung
+Điều khoản có thể thay đổi theo thời gian. Mọi cập nhật sẽ được thông báo rõ ràng.
+
+Việc tiếp tục sử dụng JobTop sau khi điều khoản được cập nhật đồng nghĩa với việc bạn chấp nhận các thay đổi.
+
+11. Liên hệ
+Mọi thắc mắc hoặc khiếu nại vui lòng liên hệ qua email: support@jobtop.vn

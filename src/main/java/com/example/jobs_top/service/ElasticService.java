@@ -12,6 +12,8 @@ import com.example.jobs_top.model.enums.JobType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -30,16 +32,24 @@ public class ElasticService {
     private final VectorStore vectorStore;
     private final ElasticsearchClient elasticsearchClient;
     private final TokenTextSplitter tokenTextSplitter;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisCacheService redisCacheService;
     private final ObjectMapper objectMapper;
 
-    public ElasticService(VectorStore vectorStore, ElasticsearchClient elasticsearchClient, TokenTextSplitter tokenTextSplitter, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+
+
+    public ElasticService(VectorStore vectorStore,
+                          ElasticsearchClient elasticsearchClient,
+                          TokenTextSplitter tokenTextSplitter,
+                          RedisCacheService redisCacheService,
+                          ObjectMapper objectMapper) {
         this.vectorStore = vectorStore;
         this.elasticsearchClient = elasticsearchClient;
         this.tokenTextSplitter = tokenTextSplitter;
-        this.redisTemplate = redisTemplate;
+        this.redisCacheService = redisCacheService;
         this.objectMapper = objectMapper;
+
     }
+
     private String safe(Object o) {
         return o == null ? "" : o.toString();
     }
@@ -68,34 +78,45 @@ public class ElasticService {
 
     public List<JobDto> sematicSearchJobDocumentCache(String query) throws JsonProcessingException {
         String key = "job:search:ai" + query.toLowerCase();
-        Object cachedObj = redisTemplate.opsForValue().get(key);
-
+        Object cachedObj = redisCacheService.get(key);
         if (cachedObj != null) {
-            // Parse the JSON string manually
+            System.out.println("Get from cache");
             return objectMapper.readValue((String)cachedObj, new TypeReference<List<JobDto>>() {});
         }
-        List<Document> results= vectorStore
-                .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
-                .withTopK(20).withSimilarityThreshold(0.8));
+        //RLock lock = redissonClient.getLock(key);
+        try {
+            //lock.lock();
+            System.out.println("Get from query");
+
+            List<Document> results= vectorStore
+                    .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
+                            .withTopK(20).withSimilarityThreshold(0.8));
 
 
 
 
-        if (results.isEmpty()) {
-            // Cache empty results too to avoid repeated searches
-            redisTemplate.opsForValue().set(key, List.of(), Duration.ofHours(1));
-            return List.of();
+            if (results.isEmpty()) {
+                // Cache empty results too to avoid repeated searches
+                redisCacheService.set(key,List.of(),1);
+
+                return List.of();
+            }
+
+            // Map documents to jobs
+            List<JobDto> jobs = results.stream()
+                    .map(doc -> mapToJob(doc.getMetadata()))
+                    .toList();
+
+            // Store in cache with expiration
+            redisCacheService.set(key,objectMapper.writeValueAsString(jobs) , 1);
+
+            return jobs;
+
+        } finally {
+            //lock.unlock();
         }
 
-        // Map documents to jobs
-        List<JobDto> jobs = results.stream()
-                .map(doc -> mapToJob(doc.getMetadata()))
-                .toList();
 
-        // Store in cache with expiration
-        redisTemplate.opsForValue().set(key,objectMapper.writeValueAsString(jobs) , Duration.ofHours(1));
-
-        return jobs;
 
     }
 

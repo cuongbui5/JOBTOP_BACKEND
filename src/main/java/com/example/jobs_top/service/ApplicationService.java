@@ -47,6 +47,60 @@ public class ApplicationService {
     }
 
 
+    public Application applyJobAI(String jobName,String companyName){
+        Account account=Utils.getAccount();
+        if(!validateResume(account)){
+            throw new IllegalArgumentException("Chưa cập nhật thông tin CV");
+        }
+
+
+
+        Optional<Job> job=jobRepository.findByTitleAndCompany(jobName,companyName);
+        if(job.isEmpty()){
+            throw new RuntimeException("Not found job");
+        }
+
+        if(!validateApplication(job.get().getId(),account.getId())){
+            throw new IllegalArgumentException("Bạn đã ứng tuyển công việc này. Nếu muốn ứng tuyển lại vui lòng quay lại sau 7 ngày!");
+        }
+
+        Resume resume=resumeRepository.getReferenceById(account.getResumeDefault());
+        Application application=new Application();
+        application.setJob(job.get());
+        application.setResume(resume);
+        application.setStatus(ApplicationStatus.PENDING);
+        application.setAccount(account);
+        String content = String.format("Bạn đã ứng tuyển vào vị trí %s", job.get().getTitle());
+        notificationService.createNotification(
+                new CreateNotification(account.getId(),
+                        content,
+                        "Hệ thống"));
+        return applicationRepository.save(application);
+
+
+    }
+
+
+    public boolean validateApplication(Long jobId,Long accountId){
+        Optional<Application> applicationOptional=applicationRepository
+                .findByJobIdAndAccountIdOrderByCreatedAtDesc(jobId,accountId);
+
+        if(applicationOptional.isPresent()){
+            Application application=applicationOptional.get();
+            long daysBetween = ChronoUnit.DAYS.between(application.getCreatedAt(), ZonedDateTime.now());
+            return daysBetween >= 7;
+        }
+        return true;
+    }
+
+    public boolean validateResume(Account account){
+        if(account.getResumeDefault()==null){
+           return false;
+        }
+        return true;
+    }
+
+
 
 
     @Transactional
@@ -67,8 +121,8 @@ public class ApplicationService {
                 throw new IllegalArgumentException("Bạn cần đợi thêm " + remainingDays + " ngày trước khi có thể ứng tuyển lại. Cảm ơn bạn đã quan tâm!");
             }
         }
-        Job job=jobRepository.findById(jobId).orElseThrow(()->new RuntimeException("Not found job"));
-        Resume resume=resumeRepository.findById(account.getResumeDefault()).orElseThrow(()->new RuntimeException("Not found CV"));
+        Job job=jobRepository.getReferenceById(jobId);
+        Resume resume=resumeRepository.getReferenceById(account.getResumeDefault());
         Application application=new Application();
         application.setJob(job);
         application.setResume(resume);
@@ -197,31 +251,39 @@ public class ApplicationService {
     public void addToInterview(Long interviewId, AddToInterviewRequest addToInterviewRequest) {
         InterviewSchedule interviewSchedule=interviewScheduleRepository.findById(interviewId)
                 .orElseThrow(()->new NotFoundException("Not found interview schedule"));
-        List<Application> applications= getApplicationsInIds(addToInterviewRequest);
 
-        applications.forEach(a->{
-            if (a.getInterviewSchedule() != null) {
-                throw new IllegalArgumentException("Ứng viên đã được gán vào lịch phỏng vấn.");
+        if(interviewSchedule.getStatus()==InterviewStatus.SCHEDULED){
+            List<Application> applications = getApplicationsInIds(addToInterviewRequest);
 
-            }
-            ApplicationStatus currentStatus=a.getStatus();
-            ApplicationStatus newStatus=ApplicationStatus.ADDED_TO_INTERVIEW;
-            if (!currentStatus.canTransitionTo(newStatus)) {
-                throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
-            }
-            a.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
-            a.setInterviewSchedule(interviewSchedule);
-            Account account=a.getAccount();
-            String content = String
-                    .format("Nhà tuyển dụng %s đã tạo lịch phỏng vấn cho bạn",
-                            a.getJob().getCompany().getName());
-            notificationService.createNotification(
-                    new CreateNotification(account.getId(),
-                            content,
-                            "Hệ thống"));
-        });
+            applications.forEach(a->{
+                if (a.getInterviewSchedule() != null) {
+                    throw new IllegalArgumentException("Ứng viên đã được gán vào lịch phỏng vấn.");
 
-        applicationRepository.saveAll(applications);
+                }
+                ApplicationStatus currentStatus=a.getStatus();
+                ApplicationStatus newStatus=ApplicationStatus.ADDED_TO_INTERVIEW;
+                if (!currentStatus.canTransitionTo(newStatus)) {
+                    throw new IllegalStateException("Trạng thái không hợp lệ: không thể chuyển từ " + currentStatus.getLabel() + " sang " + newStatus.getLabel());
+                }
+                a.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
+                a.setInterviewSchedule(interviewSchedule);
+                Account account=a.getAccount();
+                String content = String
+                        .format("Nhà tuyển dụng %s đã tạo lịch phỏng vấn cho bạn",
+                                a.getJob().getCompany().getName());
+                notificationService.createNotification(
+                        new CreateNotification(account.getId(),
+                                content,
+                                "Hệ thống"));
+            });
+
+            applicationRepository.saveAll(applications);
+        }else {
+            throw new IllegalArgumentException("Buổi phỏng vấn này đã kết thúc hoặc bị hủy");
+        }
+
+
+
 
 
     }

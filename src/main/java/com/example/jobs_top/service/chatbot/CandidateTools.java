@@ -1,12 +1,16 @@
-package com.example.jobs_top.service;
+package com.example.jobs_top.service.chatbot;
 
 
+import com.example.jobs_top.dto.req.CreateApplicationRequest;
 import com.example.jobs_top.dto.res.InterviewScheduleDto;
+import com.example.jobs_top.model.Application;
+import com.example.jobs_top.service.ApplicationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 
@@ -31,6 +35,22 @@ public class CandidateTools {
             }
         };
     }
+
+    @Bean
+    @Description("Nộp đơn ứng tuyển")
+    public Function<CreateApplicationRequest, Application> applyJob() {
+        return (request) -> {
+            try {
+                return applicationService.applyJobAI(request.getJobName(), request.getCompanyName());
+            }
+            catch (Exception e) {
+
+                return new Application();
+            }
+        };
+    }
+
+
 
 
 

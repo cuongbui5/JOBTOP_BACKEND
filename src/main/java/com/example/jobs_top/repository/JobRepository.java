@@ -33,6 +33,15 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @EntityGraph(attributePaths = {"company"})
     Optional<Job> findById(Long id);
+    @Query("""
+        SELECT j
+        FROM Job j
+        WHERE  j.title = :title
+        AND j.company.name = :company
+        AND j.status = 'APPROVED'
+        AND j.applicationDeadline > CURRENT_DATE
+    """)
+    Optional<Job> findByTitleAndCompany(String title, String company);
 
 
 

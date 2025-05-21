@@ -27,7 +27,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     WHERE (:role IS NULL OR a.role = :role)
       AND (:companyName IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :companyName, '%')))
 """)
-    Page<Object[]> findAccountsWithCompanyAndFilter(
+    Page<Object[]> findAccountsWithFilter(
             @Param("role") RoleType role,
             @Param("companyName") String companyName,
             Pageable pageable

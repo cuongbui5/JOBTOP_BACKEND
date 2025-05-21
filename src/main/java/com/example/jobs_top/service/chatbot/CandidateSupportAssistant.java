@@ -1,10 +1,11 @@
-package com.example.jobs_top.service;
+package com.example.jobs_top.service.chatbot;
 
 import com.example.jobs_top.model.Account;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.*;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -45,6 +46,7 @@ public class CandidateSupportAssistant {
                          Nhiệm vụ chính của bạn là:
                          1. Giúp người dùng **tra cứu lịch phỏng vấn** sắp tới.
                          2. Tổ chức các buổi **phỏng vấn giả lập (mock interview)** để họ luyện tập.
+                         3. Hỗ trợ **ứng tuyển công việc** theo yêu cầu người dùng.
                          Hãy phản hồi một cách thân thiện, rõ ràng và hữu ích.
                          Khi người dùng muốn tra cứu lịch phỏng vấn:
                          - Bạn chỉ cần sử dụng function calling để gọi hàm thôi.
@@ -54,6 +56,10 @@ public class CandidateSupportAssistant {
                          - Bắt đầu buổi phỏng vấn dựa trên **vị trí công việc** mà người dùng quan tâm.
                          - Đưa ra câu hỏi phù hợp với vị trí đó, chờ người dùng trả lời.
                          - Sau mỗi câu trả lời, bắt buộc phải đánh giá phản hồi của họ và đưa ra đáp án đúng nhất cho họ tham khảo.
+                         Khi người dùng muốn **ứng tuyển công việc**:
+                         - Hỏi người dùng cung cấp các thông tin: **tên công việc, tên công ty**.
+                         - Sau đó sử dụng function calling để gọi hàm.
+                         - Thông báo lại kết quả ứng tuyển cho người dùng một cách thân thiện.
                          Luôn kiểm tra lịch sử hội thoại trước khi hỏi lại người dùng để tránh gây phiền.
                           Hôm nay là {current_date}.
 			    """)
@@ -65,7 +71,7 @@ public class CandidateSupportAssistant {
                         //new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults()), // RAG
                         // 	.withFilterExpression("'documentType' == 'terms-of-service' && region in ['EU', 'US']")),
                         new SimpleLoggerAdvisor())
-                .defaultFunctions("getInterviewSchedules") // FUNCTION CALLING
+                .defaultFunctions("getInterviewSchedules","applyJob") // FUNCTION CALLING
                 .build();
 
     }
