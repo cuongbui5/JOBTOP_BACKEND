@@ -83,7 +83,7 @@ public class ApplicationService {
 
     public boolean validateApplication(Long jobId,Long accountId){
         Optional<Application> applicationOptional=applicationRepository
-                .findByJobIdAndAccountIdOrderByCreatedAtDesc(jobId,accountId);
+                .findFirstByJobIdAndAccountIdOrderByCreatedAtDesc(jobId,accountId);
 
         if(applicationOptional.isPresent()){
             Application application=applicationOptional.get();
@@ -111,7 +111,7 @@ public class ApplicationService {
         }
 
         Optional<Application> applicationOptional=applicationRepository
-                .findByJobIdAndAccountIdOrderByCreatedAtDesc(jobId, account.getId());
+                .findFirstByJobIdAndAccountIdOrderByCreatedAtDesc(jobId, account.getId());
 
         if(applicationOptional.isPresent()){
             Application application=applicationOptional.get();
@@ -167,9 +167,9 @@ public class ApplicationService {
         }
         application.setStatus(ApplicationStatus.VIEWED);
         Account account=application.getAccount();
-        String content = String
-                .format("Nhà tuyển dụng %s vừa xem hồ sơ ứng tuyển của bạn",
-                        application.getJob().getCompany().getName());
+        String content = String.format("Công việc: %s - Nhà tuyển dụng %s vừa xem hồ sơ ứng tuyển của bạn",
+                application.getJob().getTitle(),
+                application.getJob().getCompany().getName());
         notificationService.createNotification(
                 new CreateNotification(account.getId(),
                         content,
@@ -190,9 +190,9 @@ public class ApplicationService {
         }
         application.setStatus(ApplicationStatus.REJECTED);
         Account account=application.getAccount();
-        String content = String
-                .format("Nhà tuyển dụng %s đã từ chối hồ sơ ứng tuyển của bạn",
-                        application.getJob().getCompany().getName());
+        String content = String.format("Công việc: %s. Nhà tuyển dụng %s đã từ chối hồ sơ ứng tuyển của bạn.",
+                application.getJob().getTitle(),
+                application.getJob().getCompany().getName());
         notificationService.createNotification(
                 new CreateNotification(account.getId(),
                         content,
@@ -210,9 +210,9 @@ public class ApplicationService {
         }
         application.setStatus(ApplicationStatus.APPROVED);
         Account account=application.getAccount();
-        String content = String
-                .format("Nhà tuyển dụng %s đã chấp nhận hồ sơ ứng tuyển của bạn",
-                        application.getJob().getCompany().getName());
+        String content = String.format("Công việc: %s. Nhà tuyển dụng %s đã chấp nhận hồ sơ ứng tuyển của bạn.",
+                application.getJob().getTitle(),
+                application.getJob().getCompany().getName());
         notificationService.createNotification(
                 new CreateNotification(account.getId(),
                         content,
@@ -268,9 +268,13 @@ public class ApplicationService {
                 a.setStatus(ApplicationStatus.ADDED_TO_INTERVIEW);
                 a.setInterviewSchedule(interviewSchedule);
                 Account account=a.getAccount();
-                String content = String
-                        .format("Nhà tuyển dụng %s đã tạo lịch phỏng vấn cho bạn",
-                                a.getJob().getCompany().getName());
+                String content = String.format("Công việc: %s. Nhà tuyển dụng %s đã tạo lịch phỏng vấn cho bạn vào ngày %s từ %s đến %s tại %s",
+                        a.getJob().getTitle(),
+                        a.getJob().getCompany().getName(),
+                        interviewSchedule.getInterviewDate().toString(),
+                        interviewSchedule.getStartTime(),
+                        interviewSchedule.getEndTime(),
+                        interviewSchedule.getOfficeAddress());
                 notificationService.createNotification(
                         new CreateNotification(account.getId(),
                                 content,
@@ -302,9 +306,9 @@ public class ApplicationService {
             }
             a.setStatus(ApplicationStatus.REJECTED);
             Account account=a.getAccount();
-            String content = String
-                    .format("Nhà tuyển dụng %s đã xóa bạn khỏi cuộc phỏng vấn",
-                            a.getJob().getCompany().getName());
+            String content = String.format("Công việc: %s. Nhà tuyển dụng %s đã xóa bạn khỏi cuộc phỏng vấn.",
+                    a.getJob().getTitle(),
+                    a.getJob().getCompany().getName());
             notificationService.createNotification(
                     new CreateNotification(account.getId(),
                             content,

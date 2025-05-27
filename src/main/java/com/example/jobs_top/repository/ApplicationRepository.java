@@ -57,7 +57,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
                                                        @Param("status") ApplicationStatus applicationStatus,
                                                        Pageable pageable);
 
-    Optional<Application> findByJobIdAndAccountIdOrderByCreatedAtDesc(Long jobId, Long accountId);
+    Optional<Application> findFirstByJobIdAndAccountIdOrderByCreatedAtDesc(Long jobId, Long accountId);
 
     @Query("""
         SELECT a.id AS id,
