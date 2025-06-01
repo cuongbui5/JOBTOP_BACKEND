@@ -11,6 +11,7 @@ import com.example.jobs_top.model.enums.RoleType;
 import com.example.jobs_top.repository.AccountRepository;
 import com.example.jobs_top.security.jwt.JwtService;
 import com.example.jobs_top.security.UserPrincipal;
+import com.example.jobs_top.utils.Constants;
 import com.example.jobs_top.utils.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -59,7 +60,7 @@ public class AuthService {
         account.setStatus(AccountStatus.ACTIVE);
         account.setRole(registerRequest.getRole());
         if (registerRequest.getRole()==RoleType.EMPLOYER) {
-            account.setFreePost(3);
+            account.setFreePost(Constants.FREE_POST);
         }else if(registerRequest.getRole()==RoleType.CANDIDATE) {
             account.setReceiveEmail(true);
         }

@@ -40,7 +40,7 @@ public class CompanyController {
         );
 
     }
-    @PutMapping("/update/{id}")
+    @PatchMapping("/update/{id}")
     public ResponseEntity<?> updateCompany(@PathVariable Long id,@RequestBody Company company) {
         return ResponseEntity.ok().body(
                 new ApiResponse<>(

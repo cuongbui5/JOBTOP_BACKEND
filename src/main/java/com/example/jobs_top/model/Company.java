@@ -2,11 +2,13 @@ package com.example.jobs_top.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "companies")
+@DynamicUpdate
 public class Company extends BaseEntity{
     private String name;
     private String logo;

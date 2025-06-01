@@ -83,38 +83,33 @@ public class ElasticService {
             System.out.println("Get from cache");
             return objectMapper.readValue((String)cachedObj, new TypeReference<List<JobDto>>() {});
         }
-        //RLock lock = redissonClient.getLock(key);
-        try {
-            //lock.lock();
-            System.out.println("Get from query");
+        System.out.println("Get from query");
 
-            List<Document> results= vectorStore
-                    .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
-                            .withTopK(20).withSimilarityThreshold(0.8));
+        List<Document> results= vectorStore
+                .similaritySearch(SearchRequest.query("Tìm công việc liên quan đến: "+query.toLowerCase())
+                        .withTopK(20).withSimilarityThreshold(0.8));
 
 
 
 
-            if (results.isEmpty()) {
-                // Cache empty results too to avoid repeated searches
-                redisCacheService.set(key,List.of(),1);
+        if (results.isEmpty()) {
+            // Cache empty results too to avoid repeated searches
+            redisCacheService.set(key,List.of(),1);
 
-                return List.of();
-            }
-
-            // Map documents to jobs
-            List<JobDto> jobs = results.stream()
-                    .map(doc -> mapToJob(doc.getMetadata()))
-                    .toList();
-
-            // Store in cache with expiration
-            redisCacheService.set(key,objectMapper.writeValueAsString(jobs) , 1);
-
-            return jobs;
-
-        } finally {
-            //lock.unlock();
+            return List.of();
         }
+
+        // Map documents to jobs
+        List<JobDto> jobs = results.stream()
+                .map(doc -> mapToJob(doc.getMetadata()))
+                .distinct()
+                .toList();
+
+        // Store in cache with expiration
+        redisCacheService.set(key,objectMapper.writeValueAsString(jobs) , 1);
+
+
+        return jobs;
 
 
 

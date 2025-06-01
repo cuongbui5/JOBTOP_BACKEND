@@ -36,7 +36,7 @@ public class CompanyService {
         companyUpdated.setWebsite(company.getWebsite());
         companyUpdated.setCategory(company.getCategory());
         companyUpdated.setFoundedDate(company.getFoundedDate());
-        return companyRepository.save(company);
+        return companyRepository.save(companyUpdated);
     }
 
 

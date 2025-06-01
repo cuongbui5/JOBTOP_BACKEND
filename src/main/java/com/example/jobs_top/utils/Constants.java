@@ -12,6 +12,7 @@ public class Constants {
     public static final String FAILED_MESSAGE="failed";
     public static final String PASSWORD_GOOGLE_USER="PASSWORD_GOOGLE_USER";
     public static final String REGISTER_OK = "Bạn đã đăng kí tài khoản thành công";
+    public static final int FREE_POST=1;
 
 
 

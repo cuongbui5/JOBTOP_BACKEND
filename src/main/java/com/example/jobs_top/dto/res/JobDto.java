@@ -7,6 +7,7 @@ import com.example.jobs_top.model.enums.JobType;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class JobDto {
     private Long id;
@@ -50,7 +51,17 @@ public class JobDto {
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        JobDto jobDto = (JobDto) o;
+        return Objects.equals(id, jobDto.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 
     public Long getId() {
         return id;
