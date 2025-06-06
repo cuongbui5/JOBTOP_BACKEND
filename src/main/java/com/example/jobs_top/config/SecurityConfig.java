@@ -6,6 +6,7 @@ import com.example.jobs_top.security.CustomAccessDeniedHandler;
 import com.example.jobs_top.security.CustomAuthenticationEntryPoint;
 import com.example.jobs_top.security.jwt.JwtFilter;
 import com.example.jobs_top.security.MyUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -39,6 +40,11 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    @Value("${cloudinary.api-key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api-secret}")
+    private String apiSecret;
 
 
     public SecurityConfig(MyUserDetailsService myUserDetailsService, JwtFilter jwtFilter, CustomAccessDeniedHandler customAccessDeniedHandler, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
@@ -53,8 +59,8 @@ public class SecurityConfig {
     public Cloudinary cloudinary() {
         final Map<String, String> config = new HashMap<>();
         config.put("cloud_name", "dvpx0s59u");
-        config.put("api_key", "314678288715114");
-        config.put("api_secret", "V_rcUdVdOfJRUts3kBZTnL4KlMg");
+        config.put("api_key", apiKey);
+        config.put("api_secret", apiSecret);
         return new Cloudinary(config);
     }
 

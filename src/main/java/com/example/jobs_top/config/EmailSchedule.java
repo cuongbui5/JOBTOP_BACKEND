@@ -30,7 +30,7 @@ public class EmailSchedule {
     public void sendJobSuggestionsToUsers() {
         List<Account> accounts = accountRepository.findByReceiveEmailTrue();
         accounts.forEach(account -> {
-            List<JobDto> jobs=aiService.findTopJobByCandidate(account,4);
+            List<JobDto> jobs=aiService.findTopJobByCandidate(account,1);
             if(jobs!=null&&!jobs.isEmpty()) {
                 String content = Utils.buildJobDtoListEmailContent(jobs);
                 emailService.sendSimpleMail(account.getEmail(),"Top công việc phù hợp với bạn",content);
