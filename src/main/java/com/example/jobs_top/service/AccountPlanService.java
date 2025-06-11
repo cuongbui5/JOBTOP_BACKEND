@@ -41,8 +41,6 @@ public class AccountPlanService {
 
     @Transactional
     public void createAccountPlan(CreateAccountPlan createAccountPlan) {
-
-
         Account account= accountRepository.getReferenceById(createAccountPlan.getAccountId());
         Plan plan= planRepository.getReferenceById(createAccountPlan.getPlanId());
         AccountPlan accountPlan= new AccountPlan();

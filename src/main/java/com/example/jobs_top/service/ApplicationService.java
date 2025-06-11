@@ -36,14 +36,16 @@ public class ApplicationService {
     private final CompanyService companyService;
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
-    public ApplicationService(ApplicationRepository applicationRepository, ResumeRepository resumeRepository, JobRepository jobRepository, CompanyService companyService, InterviewScheduleRepository interviewScheduleRepository, NotificationService notificationService) {
+    public ApplicationService(ApplicationRepository applicationRepository, ResumeRepository resumeRepository, JobRepository jobRepository, CompanyService companyService, InterviewScheduleRepository interviewScheduleRepository, NotificationService notificationService, EmailService emailService) {
         this.applicationRepository = applicationRepository;
         this.resumeRepository = resumeRepository;
         this.jobRepository = jobRepository;
         this.companyService = companyService;
         this.interviewScheduleRepository = interviewScheduleRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
 
@@ -217,6 +219,9 @@ public class ApplicationService {
                 new CreateNotification(account.getId(),
                         content,
                         "Hệ thống"));
+        //Gui email
+        emailService.sendApprovedJob(account,application.getJob().getTitle());
+
         return applicationRepository.save(application);
 
     }

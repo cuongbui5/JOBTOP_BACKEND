@@ -2,6 +2,7 @@ package com.example.jobs_top.controller;
 
 import com.example.jobs_top.dto.req.CreateAccountPlan;
 import com.example.jobs_top.service.AccountPlanService;
+import com.example.jobs_top.service.TransactionService;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.StripeObject;
@@ -18,10 +19,14 @@ public class PaymentController {
     private final AccountPlanService accountPlanService;
 
     private final String signingSecret="whsec_245f214792a91f727c3eb844d4c3f2e59379f1e60b7f087a8e9aeb004f620d80";
+    private final TransactionService transactionService;
 
-    public PaymentController(AccountPlanService accountPlanService) {
+    public PaymentController(AccountPlanService accountPlanService, TransactionService transactionService) {
         this.accountPlanService = accountPlanService;
+        this.transactionService = transactionService;
     }
+
+
 
     @PostMapping("/webhook")
     public ResponseEntity<String> handlePaymentWebhook(@RequestBody String payload,
@@ -34,7 +39,7 @@ public class PaymentController {
 
 
             // Kiểm tra nếu sự kiện thanh toán thành công
-            if ("payment_intent.succeeded".equals(event.getType())) {
+            /*if ("payment_intent.succeeded".equals(event.getType())) {
                 System.out.println("Payment successful");
                 PaymentIntent paymentIntent = (PaymentIntent) event.getData().getObject();
                 String accountId = paymentIntent.getMetadata().get("accountId");
@@ -44,7 +49,8 @@ public class PaymentController {
 
                 // Lưu thông tin thanh toán vào cơ sở dữ liệu
                 //paymentService.savePaymentData(paymentIntent);
-            }
+                return ResponseEntity.ok("Webhook received");
+            }*/
 
             if ("checkout.session.completed".equals(event.getType())) {
                 // Lấy đối tượng session từ sự kiện
@@ -57,9 +63,12 @@ public class PaymentController {
                 // In ra metadata (hoặc xử lý theo nhu cầu của bạn)
                 System.out.println("Account ID: " + accountId);
                 System.out.println("Plan ID: " + planId);
+                transactionService.saveTransaction(Long.parseLong(planId),Long.parseLong(accountId));
 
                 // Bạn có thể tiếp tục xử lý các dữ liệu này (ví dụ: tạo AccountPlan)
                 accountPlanService.createAccountPlan(new CreateAccountPlan(Long.parseLong(planId), Long.parseLong(accountId)));
+                //save transaction
+                return ResponseEntity.ok("Webhook received");
             }
 
             // Trả lời với Stripe rằng Webhook đã được nhận

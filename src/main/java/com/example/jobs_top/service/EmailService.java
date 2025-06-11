@@ -1,6 +1,7 @@
 package com.example.jobs_top.service;
 
 
+import com.example.jobs_top.model.Account;
 import com.example.jobs_top.model.Candidate;
 import com.example.jobs_top.model.Job;
 import com.example.jobs_top.repository.CandidateRepository;
@@ -24,6 +25,18 @@ public class EmailService {
         this.jobRepository = jobRepository;
         this.candidateRepository = candidateRepository;
     }
+
+    public void sendApprovedJob(Account account,String jobTitle) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("jobtopsystem@gmail.com");
+        message.setTo(account.getEmail());
+        message.setSubject("Thông báo "+jobTitle);
+        message.setText("Đơn ứng tuyển "+jobTitle+" của bạn đã được chấp nhận.");
+        mailSender.send(message);
+
+    }
+
+
     @Transactional
     public void sendJobEmail(List<Long> jobIds,Long candidateId) {
 
